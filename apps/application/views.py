@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from .models import Application, Note
 import uuid
+import datetime
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -20,7 +21,20 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         """
         from rest_framework import serializers
         
+        class DateTimeField(serializers.Field):
+            """Custom field to handle datetime fields properly."""
+            def to_representation(self, value):
+                if isinstance(value, datetime.datetime):
+                    return value.date().isoformat() if value else None
+                return value
+        
         class ApplicationSerializer(serializers.ModelSerializer):
+            application_date = DateTimeField(required=False)
+            settlement_date = DateTimeField(required=False)
+            expiry_date = DateTimeField(required=False)
+            created_at = DateTimeField(read_only=True)
+            updated_at = DateTimeField(read_only=True)
+            
             class Meta:
                 model = Application
                 fields = '__all__'
