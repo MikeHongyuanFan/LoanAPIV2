@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from .models import Application, Note
+import uuid
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -23,8 +24,28 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             class Meta:
                 model = Application
                 fields = '__all__'
+                read_only_fields = ('reference_number', 'created_at', 'updated_at')
                 
         return ApplicationSerializer
+    
+    def perform_create(self, serializer):
+        """
+        Generate a reference number and set created_by when creating an application.
+        """
+        # Generate a unique reference number
+        reference_number = f"LOAN-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Set the created_by field if the user has a profile
+        created_by = None
+        if hasattr(self.request.user, 'profile'):
+            created_by = self.request.user.profile
+            
+        serializer.save(
+            reference_number=reference_number,
+            created_by=created_by,
+            created_at=timezone.now(),
+            updated_at=timezone.now()
+        )
     
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
