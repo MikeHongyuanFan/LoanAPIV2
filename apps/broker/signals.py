@@ -14,9 +14,9 @@ def create_broker_commission(sender, instance, created, **kwargs):
     if instance.status == 'APPROVED':
         # Check if broker exists and no commission has been created yet
         if instance.broker and not BrokerCommission.objects.filter(application=instance).exists():
-            # Calculate commission based on loan amount and product commission rate
+            # Calculate commission based on loan amount
             loan_amount = instance.loan_amount
-            commission_rate = instance.product.broker_commission_rate if instance.product else 0.01  # Default 1%
+            commission_rate = 0.01  # Default 1%
             commission_amount = loan_amount * commission_rate
             
             # Create the commission record
