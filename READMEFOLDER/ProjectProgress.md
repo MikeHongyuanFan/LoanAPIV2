@@ -5,7 +5,7 @@
 ### Core Features Implemented
 
 1. **API Development**
-   - ✅ Application Service: Complete with CRUD operations, document handling, notes, calculator, repayments, extensions, fee management, and reporting
+   - ✅ Application Service: Complete with CRUD operations, document handling, notes, calculator, repayments, extensions, fee management, reporting, and advanced search
    - ✅ Borrower Service: Complete with CRUD operations, search functionality, and duplicate detection
    - ✅ Guarantor Service: Complete with CRUD operations
    - ✅ Broker Service: Complete with CRUD operations and commission tracking system
@@ -15,6 +15,7 @@
    - ✅ Document Service: Complete with CRUD operations, template-based generation, DocuSign integration, and version control
    - ✅ Notification Service: Complete with automatic triggers, template management, preview functionality, and SMS capability
    - ✅ Authentication Service: Complete with comprehensive permission system and audit logging
+   - ✅ Dashboard Service: Complete with summary, user-specific, and manager-specific views
 
 2. **Advanced Features**
    - ✅ Fee Management System: Implemented tracking of fee status and payment records
@@ -28,6 +29,8 @@
    - ✅ Audit Logging: Implemented comprehensive audit logging of user actions
    - ✅ Reporting: Implemented application statistics, performance metrics, and repayment reports
    - ✅ Bulk Operations: Implemented bulk application status updates
+   - ✅ Advanced Search: Implemented both basic and full-text search capabilities
+   - ✅ Dashboard Views: Implemented role-specific dashboard views with metrics and insights
 
 ### Pending Tasks
 
@@ -73,6 +76,8 @@
 - Added DocuSign callback endpoint for webhook integration
 - Added email template preview functionality
 - Added SMS notification capability
+- Implemented advanced search functionality with both basic and full-text search options
+- Added dashboard views for different user roles with metrics and insights
 
 ## Next Steps
 
