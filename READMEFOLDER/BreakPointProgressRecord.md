@@ -55,6 +55,7 @@ This document tracks the detailed implementation progress of the Loan Applicatio
    - Added bulk application update functionality
    - Implemented advanced search functionality with both basic and full-text search options
    - Added global search endpoint for searching across all entities
+   - Implemented note reminder system with endpoints for setting and processing reminders
 
 2. **API Development - Borrower Service**:
    - Implemented BorrowerListView with filtering
@@ -124,6 +125,7 @@ This document tracks the detailed implementation progress of the Loan Applicatio
    - Created scheduled task for processing pending notifications
    - Implemented email template preview functionality
    - Added SMS notification capability
+   - Implemented scheduled notification services for repayment reminders, late repayment reminders, loan expiration reminders, and stagnant stage reminders
 
 10. **API Development - Authentication Service**:
     - Implemented ChangePasswordView for password changes
@@ -167,6 +169,8 @@ This document tracks the detailed implementation progress of the Loan Applicatio
 - Enhanced permission system with audit logging has been implemented
 - Advanced search functionality has been implemented
 - Dashboard views for different user roles have been implemented
+- Note reminder system has been implemented
+- Scheduled notification services have been implemented
 - Need to create migrations and set up the SQLite database
 - Frontend implementation status needs verification
 - Need to implement unit tests for all models and API endpoints

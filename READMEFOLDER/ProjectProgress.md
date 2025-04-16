@@ -5,7 +5,7 @@
 ### Core Features Implemented
 
 1. **API Development**
-   - ✅ Application Service: Complete with CRUD operations, document handling, notes, calculator, repayments, extensions, fee management, reporting, and advanced search
+   - ✅ Application Service: Complete with CRUD operations, document handling, notes, calculator, repayments, extensions, fee management, reporting, advanced search, and note reminders
    - ✅ Borrower Service: Complete with CRUD operations, search functionality, and duplicate detection
    - ✅ Guarantor Service: Complete with CRUD operations
    - ✅ Broker Service: Complete with CRUD operations and commission tracking system
@@ -13,7 +13,7 @@
    - ✅ QS Service: Complete with CRUD operations
    - ✅ Product Service: Complete with CRUD operations
    - ✅ Document Service: Complete with CRUD operations, template-based generation, DocuSign integration, and version control
-   - ✅ Notification Service: Complete with automatic triggers, template management, preview functionality, and SMS capability
+   - ✅ Notification Service: Complete with automatic triggers, template management, preview functionality, SMS capability, and scheduled notifications
    - ✅ Authentication Service: Complete with comprehensive permission system and audit logging
    - ✅ Dashboard Service: Complete with summary, user-specific, and manager-specific views
 
@@ -31,6 +31,8 @@
    - ✅ Bulk Operations: Implemented bulk application status updates
    - ✅ Advanced Search: Implemented both basic and full-text search capabilities
    - ✅ Dashboard Views: Implemented role-specific dashboard views with metrics and insights
+   - ✅ Note Reminder System: Implemented reminder functionality for notes with notification triggers
+   - ✅ Scheduled Notifications: Implemented automated notifications for repayments, late repayments, loan expiration, and stagnant stages
 
 ### Pending Tasks
 
@@ -78,6 +80,8 @@
 - Added SMS notification capability
 - Implemented advanced search functionality with both basic and full-text search options
 - Added dashboard views for different user roles with metrics and insights
+- Implemented note reminder system with notification triggers
+- Added scheduled notification services for repayments, late repayments, loan expiration, and stagnant stages
 
 ## Next Steps
 
