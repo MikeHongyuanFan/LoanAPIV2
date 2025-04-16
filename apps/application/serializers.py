@@ -14,7 +14,7 @@ class FeeSerializer(serializers.ModelSerializer):
         model = Fee
         fields = [
             'id', 'application', 'description', 'amount', 'fee_type', 
-            'status', 'invoice', 'payment_date', 'created_at', 'updated_at'
+            'status', 'due_date', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -25,8 +25,8 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'application', 'fee', 'amount', 'payment_type', 
-            'payment_method', 'payment_date', 'reference', 'notes', 'created_at'
+            'id', 'application', 'amount', 'payment_date', 
+            'payment_method', 'reference', 'notes', 'created_at'
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -36,7 +36,7 @@ class NoteSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Note
-        fields = ['id', 'application', 'content', 'remind_date', 'created_by', 'created_at']
+        fields = ['id', 'application', 'content', 'has_reminder', 'reminder_date', 'created_by', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class RepaymentSerializer(serializers.ModelSerializer):
@@ -45,7 +45,7 @@ class RepaymentSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Repayment
-        fields = ['id', 'application', 'due_date', 'amount', 'status', 'payment_date', 'invoice']
+        fields = ['id', 'application', 'due_date', 'amount', 'principal_amount', 'interest_amount', 'status', 'paid_date', 'paid_amount']
         read_only_fields = ['id']
 
 class ExtensionSerializer(serializers.ModelSerializer):
@@ -54,7 +54,7 @@ class ExtensionSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Extension
-        fields = ['id', 'application', 'new_loan_amount', 'new_rate', 'new_terms', 'created_at']
+        fields = ['id', 'application', 'requested_date', 'original_expiry_date', 'new_expiry_date', 'reason', 'status', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class ApplicationSerializer(serializers.ModelSerializer):
@@ -64,11 +64,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'id', 'borrower', 'broker', 'stage', 'loan_amount', 'product',
+            'id', 'borrower', 'broker', 'status', 'loan_amount', 'product',
             'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term', 'interest_rate', 'settlement_date', 'expiry_date'
+            'loan_term_months', 'interest_rate', 'settlement_date', 'expiry_date',
+            'loan_purpose', 'property_type', 'property_value', 'reference_number'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number']
 
 class ApplicationDetailSerializer(serializers.ModelSerializer):
     """
@@ -88,12 +89,13 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = [
-            'id', 'borrower', 'broker', 'stage', 'loan_amount', 'product',
+            'id', 'borrower', 'broker', 'status', 'loan_amount', 'product',
             'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term', 'interest_rate', 'settlement_date', 'expiry_date',
+            'loan_term_months', 'interest_rate', 'settlement_date', 'expiry_date',
+            'loan_purpose', 'property_type', 'property_value', 'reference_number',
             'notes', 'repayments', 'extensions', 'fees', 'payments'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number']
 
 class LoanCalculatorSerializer(serializers.Serializer):
     """

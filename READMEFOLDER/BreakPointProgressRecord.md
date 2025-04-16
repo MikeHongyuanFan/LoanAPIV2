@@ -83,6 +83,28 @@ This document tracks the implementation progress of missing APIs and features in
   - Error: Bad Request (400) when creating application
   - Need to fix field validation in ApplicationSerializer
 
+### 8. Application Serializer Fix (2025-04-16)
+
+- Fixed field mismatches in ApplicationSerializer:
+  - Changed 'stage' field to 'status' to match the model
+  - Changed 'loan_term' to 'loan_term_months' to match the model
+  - Added missing fields: 'loan_purpose', 'property_type', 'property_value', 'reference_number'
+  - Updated read_only_fields to include 'reference_number'
+
+- Fixed ApplicationDetailSerializer with the same field corrections
+
+- Fixed related serializers to match their model fields:
+  - Updated FeeSerializer (removed 'invoice', 'payment_date', added 'due_date')
+  - Updated PaymentSerializer (removed 'fee', 'payment_type', aligned with model)
+  - Updated NoteSerializer (changed 'remind_date' to 'has_reminder', 'reminder_date')
+  - Updated RepaymentSerializer (added 'principal_amount', 'interest_amount', changed 'payment_date' to 'paid_date', 'paid_amount')
+  - Updated ExtensionSerializer (aligned with model fields)
+
+- Simplified ApplicationViewSet.get_serializer_class():
+  - Now uses the proper serializers from serializers.py
+  - Returns ApplicationDetailSerializer for retrieve action
+  - Returns ApplicationSerializer for all other actions
+
 ### 7. Next Steps
 
 - Fix loan application creation in tests:

@@ -19,27 +19,10 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         """
         Return the serializer class for the request.
         """
-        from rest_framework import serializers
+        from .serializers import ApplicationSerializer, ApplicationDetailSerializer
         
-        class DateTimeField(serializers.Field):
-            """Custom field to handle datetime fields properly."""
-            def to_representation(self, value):
-                if isinstance(value, datetime.datetime):
-                    return value.date().isoformat() if value else None
-                return value
-        
-        class ApplicationSerializer(serializers.ModelSerializer):
-            application_date = DateTimeField(required=False)
-            settlement_date = DateTimeField(required=False)
-            expiry_date = DateTimeField(required=False)
-            created_at = DateTimeField(read_only=True)
-            updated_at = DateTimeField(read_only=True)
-            
-            class Meta:
-                model = Application
-                fields = '__all__'
-                read_only_fields = ('reference_number', 'created_at', 'updated_at')
-                
+        if self.action == 'retrieve':
+            return ApplicationDetailSerializer
         return ApplicationSerializer
     
     def perform_create(self, serializer):
