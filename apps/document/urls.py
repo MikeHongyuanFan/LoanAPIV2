@@ -1,17 +1,27 @@
 from django.urls import path
 from . import views
+from . import views_docusign
 
 app_name = 'document'
 
 urlpatterns = [
-    path('generate/', views.GenerateDocumentView.as_view(), name='generate-document'),
-    path('<uuid:pk>/', views.DocumentDetailView.as_view(), name='document-detail'),
-    path('upload/', views.UploadDocumentView.as_view(), name='upload-document'),
-    path('templates/', views.DocumentTemplateListView.as_view(), name='template-list'),
-    path('templates/<uuid:pk>/', views.DocumentTemplateDetailView.as_view(), name='template-detail'),
-    path('docusign/', views.DocuSignIntegrationView.as_view(), name='docusign-integration'),
-    path('send-for-signing/', views.DocumentSendForSigningView.as_view(), name='send-for-signing'),
-    path('signing-requests/', views.DocumentSigningRequestListView.as_view(), name='signing-request-list'),
-    path('signing-requests/<uuid:pk>/', views.DocumentSigningRequestDetailView.as_view(), name='signing-request-detail'),
-    path('application/<uuid:application_id>/', views.DocumentsByApplicationView.as_view(), name='documents-by-application'),
+    # Document management endpoints
+    path('documents/generate/', views.GenerateDocumentView.as_view(), name='generate-document'),
+    path('documents/<int:pk>/', views.DocumentDetailView.as_view(), name='document-detail'),
+    path('documents/upload/', views.UploadDocumentView.as_view(), name='upload-document'),
+    
+    # Document template endpoints
+    path('documents/templates/', views.DocumentTemplateListView.as_view(), name='document-template-list'),
+    path('documents/templates/<int:pk>/', views.DocumentTemplateDetailView.as_view(), name='document-template-detail'),
+    
+    # Document signing endpoints
+    path('documents/send-for-signing/', views.SendForSigningView.as_view(), name='send-for-signing'),
+    path('documents/signing-requests/', views.SigningRequestListView.as_view(), name='signing-request-list'),
+    path('documents/signing-requests/<int:pk>/', views.SigningRequestDetailView.as_view(), name='signing-request-detail'),
+    
+    # DocuSign integration endpoints
+    path('documents/docusign-callback/', views_docusign.DocuSignCallbackView.as_view(), name='docusign-callback'),
+    
+    # Document version control endpoints
+    path('documents/<int:document_id>/versions/', views_docusign.DocumentVersionView.as_view(), name='document-versions'),
 ]
