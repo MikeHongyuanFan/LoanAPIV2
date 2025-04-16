@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_reports
+from . import views_search
 
 app_name = 'application'
 
@@ -29,4 +30,8 @@ urlpatterns = [
     
     # Bulk operations
     path('bulk-update/', views_reports.BulkApplicationUpdateView.as_view(), name='bulk-update'),
+    
+    # Search endpoints
+    path('search/advanced/', views_search.AdvancedSearchView.as_view(), name='advanced-search'),
+    path('search/global/', views_search.GlobalSearchView.as_view(), name='global-search'),
 ]
