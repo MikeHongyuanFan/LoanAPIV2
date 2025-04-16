@@ -1,11 +1,18 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
-from .models import Notification
-from .serializers import NotificationSerializer, NotificationCreateSerializer, NotificationSettingsSerializer
+from .models import Notification, NotificationSetting, NotificationTemplate
+from .serializers import (
+    NotificationSerializer, 
+    NotificationCreateSerializer, 
+    NotificationSettingSerializer,
+    NotificationTemplateSerializer,
+    NotificationSettingsUpdateSerializer
+)
 
 class NotificationListView(generics.ListCreateAPIView):
     """
@@ -73,40 +80,156 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
         return Response(serializer.data)
 
-class NotificationSettingsView(APIView):
+class NotificationSendView(views.APIView):
     """
-    Manage notification settings
+    Send a notification
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        notification = get_object_or_404(Notification, pk=pk)
+        
+        if notification.status == 'SENT':
+            return Response({
+                "message": "Notification has already been sent"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        success = notification.send()
+        
+        if success:
+            return Response({
+                "message": "Notification sent successfully",
+                "notification": NotificationSerializer(notification).data
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "message": "Failed to send notification"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class NotificationSettingListView(generics.ListCreateAPIView):
+    """
+    List all notification settings or create a new setting
+    """
+    queryset = NotificationSetting.objects.all()
+    serializer_class = NotificationSettingSerializer
+    permission_classes = [IsAuthenticated]
+
+class NotificationSettingDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a notification setting
+    """
+    queryset = NotificationSetting.objects.all()
+    serializer_class = NotificationSettingSerializer
+    permission_classes = [IsAuthenticated]
+
+class NotificationTemplateListView(generics.ListCreateAPIView):
+    """
+    List all notification templates or create a new template
+    """
+    queryset = NotificationTemplate.objects.all()
+    serializer_class = NotificationTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+class NotificationTemplateDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a notification template
+    """
+    queryset = NotificationTemplate.objects.all()
+    serializer_class = NotificationTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+class NotificationSettingsUpdateView(views.APIView):
+    """
+    Update multiple notification settings at once
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """
-        Get notification settings
+        Get all notification settings as a dictionary
         """
-        # This would typically retrieve settings from a database or cache
-        # For now, we'll return default settings
-        settings = {
-            'repayment_reminder_days': 7,
-            'loan_expiration_days': 30,
-            'stage_stagnation_days': 14,
-            'enable_email_notifications': True,
-            'enable_sms_notifications': False
-        }
+        settings = {}
+        
+        # Get all settings from the database
+        notification_settings = NotificationSetting.objects.all()
+        
+        # Convert to a dictionary format
+        for setting in notification_settings:
+            if setting.setting_type == 'REPAYMENT_REMINDER_DAYS':
+                settings['repayment_reminder_days'] = setting.value
+            elif setting.setting_type == 'LOAN_EXPIRATION_DAYS':
+                settings['loan_expiration_days'] = setting.value
+            elif setting.setting_type == 'LATE_REPAYMENT_DAYS':
+                settings['late_repayment_days'] = setting.value
+            elif setting.setting_type == 'STAGE_STAGNATION_DAYS':
+                settings['stage_stagnation_days'] = setting.value
         
         return Response(settings, status=status.HTTP_200_OK)
     
     def post(self, request):
         """
-        Update notification settings
+        Update multiple notification settings at once
         """
-        serializer = NotificationSettingsSerializer(data=request.data)
+        serializer = NotificationSettingsUpdateSerializer(data=request.data)
         
         if serializer.is_valid():
-            # This would typically update settings in a database or cache
-            # For now, we'll just return the validated data
+            # Update each setting in the database
+            for key, value in serializer.validated_data.items():
+                if key == 'repayment_reminder_days':
+                    setting_type = 'REPAYMENT_REMINDER_DAYS'
+                elif key == 'loan_expiration_days':
+                    setting_type = 'LOAN_EXPIRATION_DAYS'
+                elif key == 'late_repayment_days':
+                    setting_type = 'LATE_REPAYMENT_DAYS'
+                elif key == 'stage_stagnation_days':
+                    setting_type = 'STAGE_STAGNATION_DAYS'
+                else:
+                    continue
+                
+                # Update or create the setting
+                setting, created = NotificationSetting.objects.update_or_create(
+                    setting_type=setting_type,
+                    defaults={'value': value}
+                )
+            
             return Response({
                 "message": "Settings updated successfully",
                 "settings": serializer.validated_data
             }, status=status.HTTP_200_OK)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PendingNotificationsView(views.APIView):
+    """
+    Process pending notifications
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """
+        Process all pending notifications that are due
+        """
+        now = timezone.now()
+        
+        # Get all pending notifications that are due
+        pending_notifications = Notification.objects.filter(
+            status='PENDING',
+            trigger_date__lte=now
+        )
+        
+        sent_count = 0
+        failed_count = 0
+        
+        # Send each notification
+        for notification in pending_notifications:
+            success = notification.send()
+            if success:
+                sent_count += 1
+            else:
+                failed_count += 1
+        
+        return Response({
+            "message": f"Processed {sent_count + failed_count} notifications",
+            "sent": sent_count,
+            "failed": failed_count
+        }, status=status.HTTP_200_OK)

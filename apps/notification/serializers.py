@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Notification
+from .models import Notification, NotificationSetting, NotificationTemplate
 
 class NotificationSerializer(serializers.ModelSerializer):
     """
@@ -29,12 +29,29 @@ class NotificationCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Trigger date cannot be in the past")
         return data
 
-class NotificationSettingsSerializer(serializers.Serializer):
+class NotificationSettingSerializer(serializers.ModelSerializer):
     """
     Serializer for notification settings
     """
+    class Meta:
+        model = NotificationSetting
+        fields = ['id', 'setting_type', 'value', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class NotificationTemplateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for notification templates
+    """
+    class Meta:
+        model = NotificationTemplate
+        fields = ['id', 'type', 'subject_template', 'body_template', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class NotificationSettingsUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for updating multiple notification settings at once
+    """
     repayment_reminder_days = serializers.IntegerField(min_value=1, max_value=30, required=False)
     loan_expiration_days = serializers.IntegerField(min_value=1, max_value=90, required=False)
+    late_repayment_days = serializers.IntegerField(min_value=1, max_value=30, required=False)
     stage_stagnation_days = serializers.IntegerField(min_value=1, max_value=30, required=False)
-    enable_email_notifications = serializers.BooleanField(required=False)
-    enable_sms_notifications = serializers.BooleanField(required=False)
