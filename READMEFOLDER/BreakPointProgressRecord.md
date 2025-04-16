@@ -61,7 +61,34 @@ This document tracks the implementation progress of missing APIs and features in
   - AdminDashboardView class exists
   - URL path for admin-dashboard is already defined
 
-### 5. Next Steps
+### 5. Test Fixes (2025-04-16)
+
+- Fixed borrower merge test:
+  - Updated BorrowerMergeView to use request.user.profile instead of request.user
+  - Added null check for profile attribute
+
+- Fixed application serializer issue:
+  - Added get_serializer_class method to ApplicationViewSet
+  - Added get_serializer_class method to NoteViewSet
+  - Implemented basic serializers for Application and Note models
+
+### 6. Test Results
+
+- Borrower workflow tests: PASSED
+  - test_create_borrower_workflow: PASSED
+  - test_merge_borrowers_workflow: PASSED
+
+- Loan application flow test: FAILED
+  - test_complete_loan_application_flow: FAILED
+  - Error: Bad Request (400) when creating application
+  - Need to fix field validation in ApplicationSerializer
+
+### 7. Next Steps
+
+- Fix loan application creation in tests:
+  - Debug field validation errors in ApplicationSerializer
+  - Check required fields in Application model
+  - Update test data to match model requirements
 
 - Implement additional features for comprehensive test coverage:
   - Note reminder functionality
