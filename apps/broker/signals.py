@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from decimal import Decimal
 from apps.application.models import Application
 from .models import BrokerCommission
 
@@ -16,7 +17,7 @@ def create_broker_commission(sender, instance, created, **kwargs):
         if instance.broker and not BrokerCommission.objects.filter(application=instance).exists():
             # Calculate commission based on loan amount
             loan_amount = instance.loan_amount
-            commission_rate = 0.01  # Default 1%
+            commission_rate = Decimal('0.01')  # Default 1%
             commission_amount = loan_amount * commission_rate
             
             # Create the commission record
@@ -24,6 +25,6 @@ def create_broker_commission(sender, instance, created, **kwargs):
                 broker=instance.broker,
                 application=instance,
                 amount=commission_amount,
-                percentage=commission_rate * 100,  # Convert to percentage
+                percentage=commission_rate * Decimal('100'),  # Convert to percentage
                 status='PENDING'
             )
