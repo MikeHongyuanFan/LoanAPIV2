@@ -25,6 +25,6 @@ def create_broker_commission(sender, instance, created, **kwargs):
                 broker=instance.broker,
                 application=instance,
                 amount=commission_amount,
-                percentage=commission_rate * Decimal('100'),  # Convert to percentage
-                status='PENDING'
+                status='PENDING',
+                description=f"Commission for loan {instance.reference_number}"
             )
