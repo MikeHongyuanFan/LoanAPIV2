@@ -135,7 +135,7 @@ class BorrowerMergeView(views.APIView):
             merge_record = BorrowerMergeRecord.objects.create(
                 primary_borrower=primary,
                 merged_borrower_data=duplicate_data,
-                merged_by=request.user
+                merged_by=request.user.profile if hasattr(request.user, 'profile') else None
             )
             
             # Update applications to point to the primary borrower

@@ -13,6 +13,19 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     queryset = Application.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     
+    def get_serializer_class(self):
+        """
+        Return the serializer class for the request.
+        """
+        from rest_framework import serializers
+        
+        class ApplicationSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = Application
+                fields = '__all__'
+                
+        return ApplicationSerializer
+    
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
         """
@@ -54,7 +67,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             Note.objects.create(
                 application=application,
                 content=notes,
-                created_by=request.user
+                created_by=request.user.profile if hasattr(request.user, 'profile') else None
             )
         
         # In a real implementation, we would send notifications here
@@ -124,3 +137,16 @@ class NoteViewSet(viewsets.ModelViewSet):
     """
     queryset = Note.objects.all()
     permission_classes = [permissions.IsAuthenticated]
+    
+    def get_serializer_class(self):
+        """
+        Return the serializer class for the request.
+        """
+        from rest_framework import serializers
+        
+        class NoteSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = Note
+                fields = '__all__'
+                
+        return NoteSerializer
