@@ -4,127 +4,163 @@ from django.utils import timezone
 
 
 class UserProfile(models.Model):
-    """
-    Extended user profile for the loan application system.
-    """
-    ROLE_CHOICES = [
-        ('ADMIN', 'Administrator'),
-        ('MANAGER', 'Manager'),
-        ('STAFF', 'Staff'),
-        ('BROKER', 'Broker'),
-        ('READONLY', 'Read Only'),
-    ]
-    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='STAFF')
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    department = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    position = models.CharField(max_length=100, null=True, blank=True)
+    department = models.CharField(max_length=100, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    last_login_ip = models.GenericIPAddressField(blank=True, null=True)
     
     def __str__(self):
-        return f"{self.user.username} ({self.get_role_display()})"
+        return self.user.username
+    
+    def has_role(self, role_name):
+        """
+        Check if user has the specified role.
+        """
+        return self.user.user_roles.filter(role__name=role_name).exists()
 
 
 class Permission(models.Model):
-    """
-    Custom permission model for fine-grained access control.
-    """
-    RESOURCE_CHOICES = [
-        ('APPLICATION', 'Application'),
-        ('BORROWER', 'Borrower'),
-        ('GUARANTOR', 'Guarantor'),
-        ('BROKER', 'Broker'),
-        ('VALUER', 'Valuer'),
-        ('QS', 'Quantity Surveyor'),
-        ('PRODUCT', 'Product'),
-        ('DOCUMENT', 'Document'),
-        ('NOTIFICATION', 'Notification'),
-        ('USER', 'User'),
-        ('REPORT', 'Report'),
-    ]
-    
-    ACTION_CHOICES = [
-        ('VIEW', 'View'),
-        ('CREATE', 'Create'),
-        ('EDIT', 'Edit'),
-        ('DELETE', 'Delete'),
-        ('APPROVE', 'Approve'),
-        ('REJECT', 'Reject'),
-        ('EXPORT', 'Export'),
-        ('IMPORT', 'Import'),
-    ]
-    
     name = models.CharField(max_length=100, unique=True)
-    resource = models.CharField(max_length=20, choices=RESOURCE_CHOICES)
-    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
-    description = models.TextField(blank=True, null=True)
-    
-    def __str__(self):
-        return f"{self.get_action_display()} {self.get_resource_display()}"
-
-
-class Role(models.Model):
-    """
-    Custom role model for grouping permissions.
-    """
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-    permissions = models.ManyToManyField(Permission, related_name='roles')
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return self.name
 
 
+class Role(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    permissions = models.ManyToManyField(Permission, related_name='roles')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+
+class UserRole(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_roles')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='user_roles')
+    assigned_at = models.DateTimeField(default=timezone.now)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='assigned_roles')
+    
+    class Meta:
+        unique_together = ('user', 'role')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role.name}"
+
+
 class UserPermission(models.Model):
-    """
-    Model for assigning specific permissions to users.
-    """
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='user_permissions')
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
-    granted = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_permissions')
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='user_permissions')
+    assigned_at = models.DateTimeField(default=timezone.now)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='assigned_permissions')
     
     class Meta:
         unique_together = ('user', 'permission')
     
     def __str__(self):
-        action = "Granted" if self.granted else "Denied"
-        return f"{action} {self.permission} to {self.user}"
+        return f"{self.user.username} - {self.permission.name}"
 
 
 class AuditLog(models.Model):
-    """
-    Model for tracking user actions for auditing purposes.
-    """
-    ACTION_CHOICES = [
+    ACTION_CHOICES = (
         ('CREATE', 'Create'),
         ('READ', 'Read'),
         ('UPDATE', 'Update'),
         ('DELETE', 'Delete'),
         ('LOGIN', 'Login'),
         ('LOGOUT', 'Logout'),
-        ('EXPORT', 'Export'),
-        ('IMPORT', 'Import'),
-        ('APPROVE', 'Approve'),
-        ('REJECT', 'Reject'),
-    ]
+        ('OTHER', 'Other'),
+    )
     
-    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, related_name='audit_logs')
-    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
-    resource_type = models.CharField(max_length=100)
-    resource_id = models.CharField(max_length=100, blank=True, null=True)
-    details = models.TextField(blank=True, null=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    user_agent = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                            related_name='audit_logs')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    entity_type = models.CharField(max_length=100)
+    entity_id = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(default=timezone.now)
     
     def __str__(self):
-        return f"{self.user} {self.get_action_display()} {self.resource_type} at {self.timestamp}"
+        return f"{self.action} on {self.entity_type} by {self.user.username if self.user else 'Unknown'}"
+
+
+class Permission(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    permissions = models.ManyToManyField(Permission, related_name='roles')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+
+class UserRole(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_roles')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='user_roles')
+    assigned_at = models.DateTimeField(default=timezone.now)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='assigned_roles')
     
     class Meta:
-        ordering = ['-timestamp']
+        unique_together = ('user', 'role')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role.name}"
+
+
+class UserPermission(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_permissions')
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='user_permissions')
+    assigned_at = models.DateTimeField(default=timezone.now)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                   related_name='assigned_permissions')
+    
+    class Meta:
+        unique_together = ('user', 'permission')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.permission.name}"
+
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = (
+        ('CREATE', 'Create'),
+        ('READ', 'Read'),
+        ('UPDATE', 'Update'),
+        ('DELETE', 'Delete'),
+        ('LOGIN', 'Login'),
+        ('LOGOUT', 'Logout'),
+        ('OTHER', 'Other'),
+    )
+    
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                            related_name='audit_logs')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    entity_type = models.CharField(max_length=100)
+    entity_id = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.action} on {self.entity_type} by {self.user.username if self.user else 'Unknown'}"

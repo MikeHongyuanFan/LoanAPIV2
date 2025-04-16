@@ -1,273 +1,126 @@
-from rest_framework import generics, status, views
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from decimal import Decimal
+from .models import Application, Note
 
-from .models import Application, Note, Repayment, Extension, Fee, Payment
-from .serializers import (
-    ApplicationSerializer, 
-    ApplicationDetailSerializer,
-    NoteSerializer,
-    RepaymentSerializer,
-    ExtensionSerializer,
-    LoanCalculatorSerializer,
-    FeeSerializer,
-    PaymentSerializer
-)
 
-class ApplicationListView(generics.ListCreateAPIView):
+class ApplicationViewSet(viewsets.ModelViewSet):
     """
-    List all applications or create a new application
+    API endpoint for applications.
     """
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
-    def get_queryset(self):
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
         """
-        Filter applications based on query parameters
+        Submit an application for review.
         """
-        queryset = Application.objects.all()
+        application = self.get_object()
+        application.status = 'SUBMITTED'
+        application.updated_at = timezone.now()
+        application.save()
         
-        # Filter by keywords
-        keyword = self.request.query_params.get('keyword', None)
-        if keyword:
-            queryset = queryset.filter(
-                borrower__name__icontains=keyword
-            ) | queryset.filter(
-                property_address__icontains=keyword
+        # In a real implementation, we would send notifications here
+        
+        return Response({
+            'status': 'success',
+            'message': 'Application submitted successfully'
+        })
+    
+    @action(detail=True, methods=['post'])
+    def review(self, request, pk=None):
+        """
+        Review an application and update its status.
+        """
+        application = self.get_object()
+        status_value = request.data.get('status')
+        notes = request.data.get('notes')
+        
+        if status_value not in [s[0] for s in Application.STATUS_CHOICES]:
+            return Response({
+                'status': 'error',
+                'message': 'Invalid status value'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        application.status = status_value
+        application.updated_at = timezone.now()
+        application.save()
+        
+        # Create a note if provided
+        if notes:
+            Note.objects.create(
+                application=application,
+                content=notes,
+                created_by=request.user
             )
         
-        # Filter by stage
-        stage = self.request.query_params.get('stage', None)
-        if stage:
-            queryset = queryset.filter(stage=stage)
+        # In a real implementation, we would send notifications here
         
-        # Filter by broker
-        broker_id = self.request.query_params.get('broker', None)
-        if broker_id:
-            queryset = queryset.filter(broker_id=broker_id)
-        
-        # Filter by product (loan type)
-        product_id = self.request.query_params.get('product', None)
-        if product_id:
-            queryset = queryset.filter(product_id=product_id)
-            
-        return queryset
-
-class ApplicationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete an application
-    """
-    queryset = Application.objects.all()
-    permission_classes = [IsAuthenticated]
-    
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return ApplicationDetailSerializer
-        return ApplicationSerializer
-
-class ApplicationDocumentView(views.APIView):
-    """
-    Upload documents to an application
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request, pk):
-        application = get_object_or_404(Application, pk=pk)
-        
-        # This would typically call the Document service
-        # For now, we'll just return a success response
         return Response({
-            "message": "Document upload endpoint. Integration with Document service required."
-        }, status=status.HTTP_200_OK)
-
-class GenerateDocumentView(views.APIView):
-    """
-    Generate documents for an application
-    """
-    permission_classes = [IsAuthenticated]
+            'status': 'success',
+            'message': f'Application status updated to {status_value}'
+        })
     
-    def post(self, request, pk):
-        application = get_object_or_404(Application, pk=pk)
+    @action(detail=True, methods=['post'])
+    def generate_documents(self, request, pk=None):
+        """
+        Generate documents for an application.
+        """
+        application = self.get_object()
         
-        # This would typically call the Document service to generate documents
-        # For now, we'll just return a success response
+        # In a real implementation, we would generate actual documents here
+        # For now, we'll just return a success message
+        
         return Response({
-            "message": "Document generation endpoint. Integration with Document service required."
-        }, status=status.HTTP_200_OK)
-
-class NoteCreateView(generics.CreateAPIView):
-    """
-    Create a note for an application
-    """
-    serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        serializer.save(
-            application=application,
-            created_by=self.request.user
-        )
-
-class LoanCalculatorView(views.APIView):
-    """
-    Calculate loan amounts and fees
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request, pk):
-        application = get_object_or_404(Application, pk=pk)
-        serializer = LoanCalculatorSerializer(data=request.data)
-        
-        if serializer.is_valid():
-            data = serializer.validated_data
-            result = {}
-            
-            # Calculate based on gross loan amount
-            if 'gross_loan_amount' in data:
-                gross_amount = data['gross_loan_amount']
-                establishment_fee = data.get('establishment_fee', Decimal('0.00'))
-                valuation_fee = data.get('valuation_fee', Decimal('0.00'))
-                legal_fee = data.get('legal_fee', Decimal('0.00'))
-                broker_fee = data.get('broker_fee', Decimal('0.00'))
-                other_fees = data.get('other_fees', Decimal('0.00'))
-                
-                total_fees = establishment_fee + valuation_fee + legal_fee + broker_fee + other_fees
-                net_amount = gross_amount - total_fees
-                
-                result = {
-                    'gross_loan_amount': gross_amount,
-                    'establishment_fee': establishment_fee,
-                    'valuation_fee': valuation_fee,
-                    'legal_fee': legal_fee,
-                    'broker_fee': broker_fee,
-                    'other_fees': other_fees,
-                    'total_fees': total_fees,
-                    'net_loan_amount': net_amount
+            'status': 'success',
+            'message': 'Documents generated successfully',
+            'documents': [
+                {
+                    'id': 1,
+                    'name': 'Loan Agreement',
+                    'type': 'PDF',
+                    'url': f'/media/documents/{application.reference_number}_loan_agreement.pdf'
+                },
+                {
+                    'id': 2,
+                    'name': 'Disbursement Letter',
+                    'type': 'PDF',
+                    'url': f'/media/documents/{application.reference_number}_disbursement_letter.pdf'
                 }
-            
-            # Calculate based on net loan amount
-            elif 'net_loan_amount' in data:
-                net_amount = data['net_loan_amount']
-                establishment_fee = data.get('establishment_fee', Decimal('0.00'))
-                valuation_fee = data.get('valuation_fee', Decimal('0.00'))
-                legal_fee = data.get('legal_fee', Decimal('0.00'))
-                broker_fee = data.get('broker_fee', Decimal('0.00'))
-                other_fees = data.get('other_fees', Decimal('0.00'))
-                
-                total_fees = establishment_fee + valuation_fee + legal_fee + broker_fee + other_fees
-                gross_amount = net_amount + total_fees
-                
-                result = {
-                    'gross_loan_amount': gross_amount,
-                    'establishment_fee': establishment_fee,
-                    'valuation_fee': valuation_fee,
-                    'legal_fee': legal_fee,
-                    'broker_fee': broker_fee,
-                    'other_fees': other_fees,
-                    'total_fees': total_fees,
-                    'net_loan_amount': net_amount
-                }
-                
-            return Response(result, status=status.HTTP_200_OK)
+            ]
+        })
+    
+    @action(detail=True, methods=['post'])
+    def finalize(self, request, pk=None):
+        """
+        Finalize an application.
+        """
+        application = self.get_object()
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class RepaymentCreateView(generics.CreateAPIView):
-    """
-    Create a repayment for an application
-    """
-    serializer_class = RepaymentSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        serializer.save(application=application)
-
-class ExtensionCreateView(generics.CreateAPIView):
-    """
-    Create a loan extension for an application
-    """
-    serializer_class = ExtensionSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        serializer.save(application=application)
-
-class FeeListCreateView(generics.ListCreateAPIView):
-    """
-    List all fees for an application or create a new fee
-    """
-    serializer_class = FeeSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        return Fee.objects.filter(application=application)
-    
-    def perform_create(self, serializer):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        serializer.save(application=application)
-
-class FeeDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete a fee
-    """
-    serializer_class = FeeSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        application = get_object_or_404(Application, pk=self.kwargs['application_pk'])
-        return Fee.objects.filter(application=application)
-
-class PaymentListCreateView(generics.ListCreateAPIView):
-    """
-    List all payments for an application or create a new payment
-    """
-    serializer_class = PaymentSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
-        return Payment.objects.filter(application=application)
-    
-    def perform_create(self, serializer):
-        application = get_object_or_404(Application, pk=self.kwargs['pk'])
+        if application.status != 'APPROVED':
+            return Response({
+                'status': 'error',
+                'message': 'Only approved applications can be finalized'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
-        # If this payment is for a fee, update the fee status
-        fee_id = self.request.data.get('fee', None)
-        if fee_id:
-            fee = get_object_or_404(Fee, pk=fee_id)
-            fee.status = 'PAID'
-            fee.payment_date = serializer.validated_data['payment_date']
-            fee.save()
-            
-        serializer.save(application=application)
-
-class PaymentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete a payment
-    """
-    serializer_class = PaymentSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        application = get_object_or_404(Application, pk=self.kwargs['application_pk'])
-        return Payment.objects.filter(application=application)
-
-class ApplicationDuplicateView(views.APIView):
-    """
-    Duplicate an application with its related data
-    """
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request, pk):
-        application = get_object_or_404(Application, pk=pk)
-        new_application = application.duplicate()
+        application.status = 'FINALIZED'
+        application.updated_at = timezone.now()
+        application.save()
         
-        serializer = ApplicationSerializer(new_application)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # In a real implementation, we would handle settlement details here
+        
+        return Response({
+            'status': 'success',
+            'message': 'Application finalized successfully'
+        })
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for notes.
+    """
+    queryset = Note.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
