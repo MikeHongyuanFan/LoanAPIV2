@@ -10,8 +10,8 @@ def create_broker_commission(sender, instance, created, **kwargs):
     """
     Signal handler to automatically create a broker commission when an application is approved.
     """
-    # Only create commission when application is first approved
-    if not created and instance.tracker.has_changed('status') and instance.status == 'APPROVED':
+    # Only create commission when application status is APPROVED
+    if instance.status == 'APPROVED':
         # Check if broker exists and no commission has been created yet
         if instance.broker and not BrokerCommission.objects.filter(application=instance).exists():
             # Calculate commission based on loan amount and product commission rate
