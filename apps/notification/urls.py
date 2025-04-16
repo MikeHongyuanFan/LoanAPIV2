@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_templates
+from . import views_scheduled
 
 app_name = 'notification'
 
@@ -24,4 +25,10 @@ urlpatterns = [
     
     # SMS notification endpoint
     path('notifications/send-sms/', views_templates.SMSNotificationView.as_view(), name='send-sms'),
+    
+    # Scheduled notification endpoints
+    path('notifications/repayment-reminders/', views_scheduled.RepaymentReminderView.as_view(), name='repayment-reminders'),
+    path('notifications/late-repayment-reminders/', views_scheduled.LateRepaymentReminderView.as_view(), name='late-repayment-reminders'),
+    path('notifications/loan-expiration-reminders/', views_scheduled.LoanExpirationReminderView.as_view(), name='loan-expiration-reminders'),
+    path('notifications/stagnant-stage-reminders/', views_scheduled.StagnantStageReminderView.as_view(), name='stagnant-stage-reminders'),
 ]

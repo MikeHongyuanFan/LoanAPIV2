@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import views_reports
 from . import views_search
+from . import views_notes
 
 app_name = 'application'
 
@@ -22,6 +23,13 @@ urlpatterns = [
     path('applications/<int:pk>/fees/<int:fee_id>/', views.FeeDetailView.as_view(), name='fee-detail'),
     path('applications/<int:pk>/payments/', views.PaymentListView.as_view(), name='application-payments'),
     path('applications/<int:pk>/payments/<int:payment_id>/', views.PaymentDetailView.as_view(), name='payment-detail'),
+    
+    # Note management endpoints
+    path('applications/<int:pk>/notes/list/', views_notes.NoteListView.as_view(), name='note-list'),
+    path('applications/<int:pk>/notes/<int:note_id>/', views_notes.NoteDetailView.as_view(), name='note-detail'),
+    path('applications/<int:pk>/notes/<int:note_id>/reminder/', views_notes.NoteReminderView.as_view(), name='note-reminder'),
+    path('notes/reminders/', views_notes.PendingRemindersView.as_view(), name='pending-reminders'),
+    path('notes/process-reminders/', views_notes.ProcessRemindersView.as_view(), name='process-reminders'),
     
     # Reporting endpoints
     path('reports/statistics/', views_reports.ApplicationStatisticsView.as_view(), name='application-statistics'),
