@@ -5,7 +5,7 @@ This document tracks the detailed implementation progress of the Loan Applicatio
 ## Session: 2025-04-16
 
 ### Current Project State
-- Project structure is already established with Django framework
+- Project structure is established with Django framework
 - Core apps are created in the `apps` directory:
   - application
   - borrower
@@ -28,15 +28,15 @@ This document tracks the detailed implementation progress of the Loan Applicatio
 - API.json: Defines data models and their relationships
 - Project models:
   - apps/application/models.py: Application, Note, Repayment, Extension models
-  - apps/borrower/models.py: Borrower model
+  - apps/borrower/models.py: Borrower model with duplicate detection
   - apps/guarantor/models.py: Guarantor model
-  - apps/broker/models.py: Broker model
+  - apps/broker/models.py: Broker model with commission tracking
   - apps/valuer/models.py: Valuer model
   - apps/qs/models.py: QS (Quantity Surveyor) model
   - apps/product/models.py: Product model
-  - apps/document/models.py: Document model
-  - apps/notification/models.py: Notification model
-  - apps/authentication/models.py: UserProfile model
+  - apps/document/models.py: Document model with templates
+  - apps/notification/models.py: Notification model with triggers
+  - apps/authentication/models.py: Enhanced UserProfile model with permissions
 
 ### Implementation Progress
 1. **API Development - Application Service**:
@@ -47,6 +47,9 @@ This document tracks the detailed implementation progress of the Loan Applicatio
    - Added loan calculator functionality
    - Implemented repayment and extension creation endpoints
    - Created serializers for all application-related models
+   - Added Fee and Payment models for fee management
+   - Implemented application duplication functionality
+   - Added endpoints for fee and payment management
 
 2. **API Development - Borrower Service**:
    - Implemented BorrowerListView with filtering
@@ -54,12 +57,21 @@ This document tracks the detailed implementation progress of the Loan Applicatio
    - Added search functionality for borrowers
    - Implemented endpoint to list applications linked to a borrower
    - Created serializers for borrower models
+   - Added BorrowerDuplicateCheckView for detecting potential duplicates
+   - Implemented BorrowerMergeView for merging duplicate records
+   - Added BorrowerMergeHistoryView for tracking merge history
+   - Created BorrowerMergeRecord model for maintaining data integrity
 
 3. **API Development - Broker Service**:
    - Implemented BrokerListView with search functionality
    - Implemented BrokerDetailView for CRUD operations
    - Added endpoints to list applications and borrowers linked to a broker
    - Created serializers for broker models
+   - Added BrokerCommission model for tracking commissions
+   - Implemented CommissionPayment and CommissionPaymentItem models
+   - Added endpoints for managing commissions and payments
+   - Implemented BrokerCommissionSummaryView for reporting
+   - Created signal handlers for automatic commission creation
 
 4. **API Development - Guarantor Service**:
    - Implemented GuarantorCreateView for creating guarantors
@@ -89,12 +101,20 @@ This document tracks the detailed implementation progress of the Loan Applicatio
    - Implemented UploadDocumentView for document uploads
    - Implemented GenerateDocumentView for document generation
    - Created serializers for document models with validation
+   - Added DocumentTemplate model for template-based generation
+   - Implemented DocuSign integration for e-signatures
+   - Added document signing workflow with status tracking
+   - Created endpoints for managing document templates
 
 9. **API Development - Notification Service**:
    - Implemented NotificationListView with filtering capabilities
    - Implemented NotificationDetailView for CRUD operations
    - Added NotificationSettingsView for managing notification preferences
    - Created serializers for notifications with validation
+   - Added NotificationSetting and NotificationTemplate models
+   - Implemented signal handlers for automatic notification triggers
+   - Added endpoints for managing notification templates and settings
+   - Created scheduled task for processing pending notifications
 
 10. **API Development - Authentication Service**:
     - Implemented ChangePasswordView for password changes
@@ -103,24 +123,53 @@ This document tracks the detailed implementation progress of the Loan Applicatio
     - Implemented DeleteAccountView for user deactivation
     - Created serializers for user authentication with validation
     - Set up JWT authentication with TokenObtainPairView and TokenRefreshView
+    - Added Permission and Role models for role-based access control
+    - Implemented UserPermission model for granular permissions
+    - Created AuditLog model and middleware for tracking user actions
+    - Added permission classes for authorization checks
+    - Implemented endpoints for managing permissions and roles
+
+### Missing API Implementations Identified
+1. **Application Service**:
+   - Need to implement endpoint for bulk application status updates
+   - Need to add reporting endpoints for application statistics
+
+2. **Document Service**:
+   - Need to implement callback endpoint for DocuSign webhook integration
+   - Need to add document version control functionality
+
+3. **Notification Service**:
+   - Need to implement email template preview functionality
+   - Need to add SMS notification capability
 
 ### Next Implementation Tasks
-1. **Database Configuration**:
+1. **Missing API Implementations**:
+   - Implement the identified missing API endpoints
+   - Add any additional validation logic needed
+
+2. **Database Configuration**:
    - Create migrations for all models
    - Set up SQLite database for development
 
-2. **Frontend Development**:
+3. **Frontend Development**:
    - Check existing templates
    - Implement missing templates for core functionality
 
-3. **Testing**:
+4. **Testing**:
    - Develop unit tests for models and API endpoints
+   - Implement integration tests for service interactions
 
 ### Break Point Notes
 - All core API endpoints for all services have been implemented
+- Fee management system has been implemented
+- Notification system with automatic triggers has been implemented
+- Document templates and e-signing functionality has been implemented
+- Broker commission tracking system has been implemented
+- Borrower duplicate detection and merging has been implemented
+- Enhanced permission system with audit logging has been implemented
+- Need to implement identified missing API endpoints
 - Need to create migrations and set up the SQLite database
 - Frontend implementation status needs verification
 - Need to implement unit tests for all models and API endpoints
 
 This record will be updated at each break point to maintain continuity in development.
-For every progress, record it in the /Users/hongyuanfan/Desktop/LoanApplicationV2/READMEFOLDER/BreakPointProgressRecord.md, and at same time update the /Users/hongyuanfan/Desktop/LoanApplicationV2/READMEFOLDER/ProjectProgress.md
