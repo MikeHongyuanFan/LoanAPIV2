@@ -2,15 +2,18 @@ from rest_framework import generics, status, views
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from decimal import Decimal
 
-from .models import Application, Note, Repayment, Extension
+from .models import Application, Note, Repayment, Extension, Fee, Payment
 from .serializers import (
     ApplicationSerializer, 
     ApplicationDetailSerializer,
     NoteSerializer,
     RepaymentSerializer,
     ExtensionSerializer,
-    LoanCalculatorSerializer
+    LoanCalculatorSerializer,
+    FeeSerializer,
+    PaymentSerializer
 )
 
 class ApplicationListView(generics.ListCreateAPIView):
@@ -126,22 +129,46 @@ class LoanCalculatorView(views.APIView):
             # Calculate based on gross loan amount
             if 'gross_loan_amount' in data:
                 gross_amount = data['gross_loan_amount']
-                fees = data.get('fees', 0)
-                net_amount = gross_amount - fees
+                establishment_fee = data.get('establishment_fee', Decimal('0.00'))
+                valuation_fee = data.get('valuation_fee', Decimal('0.00'))
+                legal_fee = data.get('legal_fee', Decimal('0.00'))
+                broker_fee = data.get('broker_fee', Decimal('0.00'))
+                other_fees = data.get('other_fees', Decimal('0.00'))
+                
+                total_fees = establishment_fee + valuation_fee + legal_fee + broker_fee + other_fees
+                net_amount = gross_amount - total_fees
+                
                 result = {
                     'gross_loan_amount': gross_amount,
-                    'fees': fees,
+                    'establishment_fee': establishment_fee,
+                    'valuation_fee': valuation_fee,
+                    'legal_fee': legal_fee,
+                    'broker_fee': broker_fee,
+                    'other_fees': other_fees,
+                    'total_fees': total_fees,
                     'net_loan_amount': net_amount
                 }
             
             # Calculate based on net loan amount
             elif 'net_loan_amount' in data:
                 net_amount = data['net_loan_amount']
-                fees = data.get('fees', 0)
-                gross_amount = net_amount + fees
+                establishment_fee = data.get('establishment_fee', Decimal('0.00'))
+                valuation_fee = data.get('valuation_fee', Decimal('0.00'))
+                legal_fee = data.get('legal_fee', Decimal('0.00'))
+                broker_fee = data.get('broker_fee', Decimal('0.00'))
+                other_fees = data.get('other_fees', Decimal('0.00'))
+                
+                total_fees = establishment_fee + valuation_fee + legal_fee + broker_fee + other_fees
+                gross_amount = net_amount + total_fees
+                
                 result = {
                     'gross_loan_amount': gross_amount,
-                    'fees': fees,
+                    'establishment_fee': establishment_fee,
+                    'valuation_fee': valuation_fee,
+                    'legal_fee': legal_fee,
+                    'broker_fee': broker_fee,
+                    'other_fees': other_fees,
+                    'total_fees': total_fees,
                     'net_loan_amount': net_amount
                 }
                 
@@ -170,3 +197,77 @@ class ExtensionCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         application = get_object_or_404(Application, pk=self.kwargs['pk'])
         serializer.save(application=application)
+
+class FeeListCreateView(generics.ListCreateAPIView):
+    """
+    List all fees for an application or create a new fee
+    """
+    serializer_class = FeeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        application = get_object_or_404(Application, pk=self.kwargs['pk'])
+        return Fee.objects.filter(application=application)
+    
+    def perform_create(self, serializer):
+        application = get_object_or_404(Application, pk=self.kwargs['pk'])
+        serializer.save(application=application)
+
+class FeeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a fee
+    """
+    serializer_class = FeeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        application = get_object_or_404(Application, pk=self.kwargs['application_pk'])
+        return Fee.objects.filter(application=application)
+
+class PaymentListCreateView(generics.ListCreateAPIView):
+    """
+    List all payments for an application or create a new payment
+    """
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        application = get_object_or_404(Application, pk=self.kwargs['pk'])
+        return Payment.objects.filter(application=application)
+    
+    def perform_create(self, serializer):
+        application = get_object_or_404(Application, pk=self.kwargs['pk'])
+        
+        # If this payment is for a fee, update the fee status
+        fee_id = self.request.data.get('fee', None)
+        if fee_id:
+            fee = get_object_or_404(Fee, pk=fee_id)
+            fee.status = 'PAID'
+            fee.payment_date = serializer.validated_data['payment_date']
+            fee.save()
+            
+        serializer.save(application=application)
+
+class PaymentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a payment
+    """
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        application = get_object_or_404(Application, pk=self.kwargs['application_pk'])
+        return Payment.objects.filter(application=application)
+
+class ApplicationDuplicateView(views.APIView):
+    """
+    Duplicate an application with its related data
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, pk):
+        application = get_object_or_404(Application, pk=pk)
+        new_application = application.duplicate()
+        
+        serializer = ApplicationSerializer(new_application)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

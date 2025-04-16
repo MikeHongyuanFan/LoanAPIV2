@@ -1,10 +1,34 @@
 from rest_framework import serializers
-from .models import Application, Note, Repayment, Extension
+from .models import Application, Note, Repayment, Extension, Fee, Payment
 from apps.borrower.serializers import BorrowerSerializer
 from apps.broker.serializers import BrokerSerializer
 from apps.valuer.serializers import ValuerSerializer
 from apps.qs.serializers import QSSerializer
 from apps.product.serializers import ProductSerializer
+
+class FeeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for fee information
+    """
+    class Meta:
+        model = Fee
+        fields = [
+            'id', 'application', 'description', 'amount', 'fee_type', 
+            'status', 'invoice', 'payment_date', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class PaymentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for payment information
+    """
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'application', 'fee', 'amount', 'payment_type', 
+            'payment_method', 'payment_date', 'reference', 'notes', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
 
 class NoteSerializer(serializers.ModelSerializer):
     """
@@ -21,7 +45,7 @@ class RepaymentSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Repayment
-        fields = ['id', 'application', 'due_date', 'amount', 'status', 'payment_date']
+        fields = ['id', 'application', 'due_date', 'amount', 'status', 'payment_date', 'invoice']
         read_only_fields = ['id']
 
 class ExtensionSerializer(serializers.ModelSerializer):
@@ -42,7 +66,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'borrower', 'broker', 'stage', 'loan_amount', 'product',
             'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term', 'interest_rate'
+            'loan_term', 'interest_rate', 'settlement_date', 'expiry_date'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -58,13 +82,16 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
     notes = NoteSerializer(many=True, read_only=True)
     repayments = RepaymentSerializer(many=True, read_only=True)
     extensions = ExtensionSerializer(many=True, read_only=True)
+    fees = FeeSerializer(many=True, read_only=True)
+    payments = PaymentSerializer(many=True, read_only=True)
     
     class Meta:
         model = Application
         fields = [
             'id', 'borrower', 'broker', 'stage', 'loan_amount', 'product',
             'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term', 'interest_rate', 'notes', 'repayments', 'extensions'
+            'loan_term', 'interest_rate', 'settlement_date', 'expiry_date',
+            'notes', 'repayments', 'extensions', 'fees', 'payments'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -74,7 +101,11 @@ class LoanCalculatorSerializer(serializers.Serializer):
     """
     gross_loan_amount = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
     net_loan_amount = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
-    fees = serializers.DecimalField(max_digits=15, decimal_places=2, required=False)
+    establishment_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    valuation_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    legal_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    broker_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    other_fees = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     
     def validate(self, data):
         """
