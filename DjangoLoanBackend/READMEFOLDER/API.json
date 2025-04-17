@@ -1,0 +1,329 @@
+{
+  "Application": {
+    "id": "UUID",
+    "reference_number": "String",
+    "borrowers": "Array:FK:Borrower",
+    "broker_id": "FK:Broker",
+    "status": "String",
+    "application_type": "String",
+    "purpose": "String",
+    "loan_amount": "Decimal",
+    "interest_rate": "Decimal",
+    "loan_term": "Integer",
+    "loan_term_unit": "String",
+    "repayment_frequency": "String",
+    "product_id": "FK:Product",
+    "estimated_settlement_date": "Date",
+    "security": {
+      "type": "String",
+      "value": "Decimal",
+      "address": "Object",
+      "valuation_date": "Date",
+      "valuation_type": "String"
+    },
+    "additional_info": {
+      "description": "Text",
+      "special_conditions": "Text"
+    },
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Borrower": {
+    "id": "UUID",
+    "first_name": "String",
+    "last_name": "String",
+    "full_name": "String",
+    "date_of_birth": "Date",
+    "gender": "String",
+    "marital_status": "String",
+    "email": "String",
+    "phone": "String",
+    "mobile": "String",
+    "work_phone": "String",
+    "residential_address": {
+      "street": "String",
+      "unit": "String",
+      "city": "String",
+      "state": "String",
+      "postal_code": "String",
+      "country": "String"
+    },
+    "mailing_address": {
+      "street": "String",
+      "unit": "String",
+      "city": "String",
+      "state": "String",
+      "postal_code": "String",
+      "country": "String"
+    },
+    "residential_status": "String",
+    "years_at_address": "Decimal",
+    "nationality": "String",
+    "tax_id": "String",
+    "id_type": "String",
+    "id_number": "String",
+    "id_expiry_date": "Date",
+    "dependents": "Integer",
+    "employment": {
+      "status": "String",
+      "employer_name": "String",
+      "position": "String",
+      "industry": "String",
+      "start_date": "Date",
+      "end_date": "Date",
+      "years_in_job": "Decimal",
+      "years_in_industry": "Decimal",
+      "employer_phone": "String",
+      "employer_address": {
+        "street": "String",
+        "city": "String",
+        "state": "String",
+        "postal_code": "String",
+        "country": "String"
+      }
+    },
+    "banking": {
+      "bank_name": "String",
+      "account_type": "String",
+      "account_number": "String",
+      "bsb": "String",
+      "account_holder_name": "String",
+      "years_with_bank": "Decimal"
+    },
+    "financial": {
+      "annual_income": "Decimal",
+      "additional_income": "Decimal",
+      "income_frequency": "String",
+      "total_assets": "Decimal",
+      "total_liabilities": "Decimal",
+      "monthly_expenses": {
+        "housing": "Decimal",
+        "utilities": "Decimal",
+        "transportation": "Decimal",
+        "food": "Decimal",
+        "loan_repayments": "Decimal",
+        "other": "Decimal"
+      }
+    },
+    "additional_info": {
+      "notes": "Text",
+      "tags": "Array:String",
+      "referral_source": "String"
+    },
+    "guarantors": "Array:FK:Guarantor",
+    "is_active": "Boolean",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Guarantor": {
+    "id": "UUID",
+    "first_name": "String",
+    "last_name": "String",
+    "full_name": "String",
+    "relationship": "String",
+    "email": "String",
+    "phone": "String",
+    "date_of_birth": "Date",
+    "address": {
+      "street": "String",
+      "city": "String",
+      "state": "String",
+      "postal_code": "String",
+      "country": "String"
+    },
+    "borrower_id": "FK:Borrower",
+    "applications": "Array:FK:Application",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Broker": {
+    "id": "UUID",
+    "name": "String",
+    "company": "String",
+    "email": "String",
+    "phone": "String",
+    "mobile": "String",
+    "address": {
+      "street": "String",
+      "city": "String",
+      "state": "String",
+      "postal_code": "String",
+      "country": "String"
+    },
+    "license_number": "String",
+    "commission_rate": "Decimal",
+    "avatar": "String",
+    "is_active": "Boolean",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Valuer": {
+    "id": "UUID",
+    "name": "String",
+    "company": "String",
+    "email": "String",
+    "phone": "String",
+    "address": {
+      "street": "String",
+      "city": "String",
+      "state": "String",
+      "postal_code": "String",
+      "country": "String"
+    },
+    "license_number": "String",
+    "is_active": "Boolean",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Product": {
+    "id": "UUID",
+    "name": "String",
+    "description": "Text",
+    "interest_rate": "Decimal",
+    "min_loan_amount": "Decimal",
+    "max_loan_amount": "Decimal",
+    "min_loan_term": "Integer",
+    "max_loan_term": "Integer",
+    "loan_term_unit": "String",
+    "repayment_frequencies": "Array:String",
+    "fees": "Array:Object",
+    "is_active": "Boolean",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Document": {
+    "id": "UUID",
+    "name": "String",
+    "document_type": "String",
+    "description": "Text",
+    "file_path": "String",
+    "file_type": "String",
+    "size": "Integer",
+    "application_id": "FK:Application",
+    "borrower_id": "FK:Borrower",
+    "url": "String",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "DocumentTemplate": {
+    "id": "UUID",
+    "name": "String",
+    "description": "Text",
+    "file_type": "String",
+    "template_path": "String",
+    "variables": "Array:String",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Note": {
+    "id": "UUID",
+    "title": "String",
+    "content": "Text",
+    "note_type": "String",
+    "is_private": "Boolean",
+    "is_pinned": "Boolean",
+    "application_id": "FK:Application",
+    "borrower_id": "FK:Borrower",
+    "created_by": "FK:User",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Repayment": {
+    "id": "UUID",
+    "application_id": "FK:Application",
+    "due_date": "Date",
+    "amount": "Decimal",
+    "principal": "Decimal",
+    "interest": "Decimal",
+    "status": "String",
+    "payment_date": "Date",
+    "payment_amount": "Decimal",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "RepaymentSchedule": {
+    "id": "UUID",
+    "application_id": "FK:Application",
+    "repayments": "Array:FK:Repayment",
+    "summary": {
+      "regular_payment": "Decimal",
+      "total_interest": "Decimal",
+      "total_repayment": "Decimal"
+    },
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Extension": {
+    "id": "UUID",
+    "application_id": "FK:Application",
+    "new_loan_amount": "Decimal",
+    "new_interest_rate": "Decimal",
+    "new_loan_term": "Integer",
+    "new_loan_term_unit": "String",
+    "reason": "Text",
+    "status": "String",
+    "approved_by": "FK:User",
+    "approved_at": "DateTime",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Fee": {
+    "id": "UUID",
+    "application_id": "FK:Application",
+    "fee_type": "String",
+    "description": "String",
+    "amount": "Decimal",
+    "is_taxable": "Boolean",
+    "is_paid": "Boolean",
+    "payment_method": "String",
+    "receipt_number": "String",
+    "paid_date": "Date",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Payment": {
+    "id": "UUID",
+    "application_id": "FK:Application",
+    "amount": "Decimal",
+    "payment_method": "String",
+    "payment_date": "Date",
+    "reference_number": "String",
+    "description": "String",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "User": {
+    "id": "UUID",
+    "email": "String",
+    "password_hash": "String",
+    "first_name": "String",
+    "last_name": "String",
+    "role": "String",
+    "is_active": "Boolean",
+    "last_login": "DateTime",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "Notification": {
+    "id": "UUID",
+    "type": "String",
+    "title": "String",
+    "content": "Text",
+    "recipient_id": "FK:User",
+    "is_read": "Boolean",
+    "related_entity_type": "String",
+    "related_entity_id": "UUID",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  },
+  "NotificationSettings": {
+    "id": "UUID",
+    "user_id": "FK:User",
+    "email_notifications": "Boolean",
+    "application_updates": "Boolean",
+    "repayment_reminders": "Boolean",
+    "document_notifications": "Boolean",
+    "created_at": "DateTime",
+    "updated_at": "DateTime"
+  }
+}
