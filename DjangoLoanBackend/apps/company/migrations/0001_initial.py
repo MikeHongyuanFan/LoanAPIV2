@@ -1,0 +1,142 @@
+from django.db import migrations, models
+import django.db.models.deletion
+import uuid
+import django.core.validators
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Company',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('name', models.CharField(help_text='Legal name of the company', max_length=255)),
+                ('trading_name', models.CharField(blank=True, help_text='Trading name if different from legal name', max_length=255, null=True)),
+                ('company_type', models.CharField(choices=[('PTY_LTD', 'Proprietary Limited (Pty Ltd)'), ('LTD', 'Limited (Ltd)'), ('TRUST', 'Trust'), ('PARTNERSHIP', 'Partnership'), ('SOLE_TRADER', 'Sole Trader'), ('INCORPORATED_ASSOCIATION', 'Incorporated Association'), ('OTHER', 'Other')], help_text='Type of company entity', max_length=30)),
+                ('acn', models.CharField(blank=True, help_text='Australian Company Number', max_length=9, null=True)),
+                ('abn', models.CharField(blank=True, help_text='Australian Business Number', max_length=11, null=True)),
+                ('registration_date', models.DateField(help_text='Date the company was registered')),
+                ('registration_jurisdiction', models.CharField(help_text='Jurisdiction where the company is registered', max_length=50)),
+                ('registered_address_line1', models.CharField(help_text='Registered address line 1', max_length=255)),
+                ('registered_address_line2', models.CharField(blank=True, help_text='Registered address line 2', max_length=255, null=True)),
+                ('registered_city', models.CharField(help_text='Registered address city', max_length=100)),
+                ('registered_state', models.CharField(help_text='Registered address state/province', max_length=100)),
+                ('registered_postal_code', models.CharField(help_text='Registered address postal code', max_length=20)),
+                ('registered_country', models.CharField(default='Australia', help_text='Registered address country', max_length=100)),
+                ('business_address_line1', models.CharField(help_text='Business address line 1', max_length=255)),
+                ('business_address_line2', models.CharField(blank=True, help_text='Business address line 2', max_length=255, null=True)),
+                ('business_city', models.CharField(help_text='Business address city', max_length=100)),
+                ('business_state', models.CharField(help_text='Business address state/province', max_length=100)),
+                ('business_postal_code', models.CharField(help_text='Business address postal code', max_length=20)),
+                ('business_country', models.CharField(default='Australia', help_text='Business address country', max_length=100)),
+                ('phone', models.CharField(help_text='Company phone number', max_length=20)),
+                ('email', models.EmailField(help_text='Company email address', max_length=254)),
+                ('website', models.URLField(blank=True, help_text='Company website', null=True)),
+                ('industry', models.CharField(help_text='Industry the company operates in', max_length=100)),
+                ('business_description', models.TextField(help_text='Brief description of the business')),
+                ('employees_count', models.PositiveIntegerField(default=0, help_text='Number of employees')),
+                ('years_in_business', models.PositiveIntegerField(default=0, help_text='Number of years in business')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                'verbose_name': 'Company',
+                'verbose_name_plural': 'Companies',
+                'ordering': ['name'],
+            },
+        ),
+        migrations.CreateModel(
+            name='Director',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('first_name', models.CharField(max_length=100)),
+                ('middle_name', models.CharField(blank=True, max_length=100, null=True)),
+                ('last_name', models.CharField(max_length=100)),
+                ('date_of_birth', models.DateField()),
+                ('director_id', models.CharField(blank=True, help_text='Director identification number', max_length=50, null=True)),
+                ('appointment_date', models.DateField(help_text='Date appointed as director')),
+                ('role', models.CharField(choices=[('MANAGING_DIRECTOR', 'Managing Director'), ('EXECUTIVE_DIRECTOR', 'Executive Director'), ('NON_EXECUTIVE_DIRECTOR', 'Non-Executive Director'), ('CHAIRPERSON', 'Chairperson'), ('COMPANY_SECRETARY', 'Company Secretary'), ('OTHER', 'Other')], default='EXECUTIVE_DIRECTOR', max_length=30)),
+                ('residential_address_line1', models.CharField(max_length=255)),
+                ('residential_address_line2', models.CharField(blank=True, max_length=255, null=True)),
+                ('residential_city', models.CharField(max_length=100)),
+                ('residential_state', models.CharField(max_length=100)),
+                ('residential_postal_code', models.CharField(max_length=20)),
+                ('residential_country', models.CharField(default='Australia', max_length=100)),
+                ('phone', models.CharField(max_length=20)),
+                ('email', models.EmailField(max_length=254)),
+                ('identification_type', models.CharField(choices=[('PASSPORT', 'Passport'), ('DRIVERS_LICENSE', "Driver's License"), ('MEDICARE_CARD', 'Medicare Card'), ('OTHER', 'Other')], max_length=20)),
+                ('identification_number', models.CharField(max_length=50)),
+                ('identification_expiry', models.DateField(blank=True, null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='directors', to='company.company')),
+            ],
+            options={
+                'verbose_name': 'Director',
+                'verbose_name_plural': 'Directors',
+                'ordering': ['last_name', 'first_name'],
+            },
+        ),
+        migrations.CreateModel(
+            name='FinancialInformation',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('financial_year', models.CharField(help_text='Financial year (YYYY)', max_length=4)),
+                ('financial_year_end_date', models.DateField(help_text='End date of the financial year')),
+                ('annual_revenue', models.DecimalField(decimal_places=2, help_text='Annual revenue', max_digits=15)),
+                ('annual_profit', models.DecimalField(decimal_places=2, help_text='Annual profit/loss', max_digits=15)),
+                ('total_assets', models.DecimalField(decimal_places=2, help_text='Total assets', max_digits=15)),
+                ('total_liabilities', models.DecimalField(decimal_places=2, help_text='Total liabilities', max_digits=15)),
+                ('current_assets', models.DecimalField(decimal_places=2, help_text='Current assets', max_digits=15)),
+                ('current_liabilities', models.DecimalField(decimal_places=2, help_text='Current liabilities', max_digits=15)),
+                ('equity', models.DecimalField(decimal_places=2, help_text='Total equity', max_digits=15)),
+                ('ebitda', models.DecimalField(decimal_places=2, help_text='Earnings Before Interest, Taxes, Depreciation, and Amortization', max_digits=15)),
+                ('source', models.CharField(choices=[('AUDITED', 'Audited Financial Statements'), ('MANAGEMENT', 'Management Accounts'), ('TAX_RETURN', 'Tax Return'), ('ACCOUNTANT_PREPARED', 'Accountant Prepared'), ('OTHER', 'Other')], help_text='Source of financial information', max_length=20)),
+                ('notes', models.TextField(blank=True, help_text='Additional notes about the financial information', null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='financials', to='company.company')),
+            ],
+            options={
+                'verbose_name': 'Financial Information',
+                'verbose_name_plural': 'Financial Information',
+                'ordering': ['-financial_year', '-financial_year_end_date'],
+                'unique_together': {('company', 'financial_year')},
+            },
+        ),
+        migrations.CreateModel(
+            name='Shareholder',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('shareholder_type', models.CharField(choices=[('INDIVIDUAL', 'Individual'), ('CORPORATE', 'Corporate'), ('TRUST', 'Trust')], max_length=20)),
+                ('individual_first_name', models.CharField(blank=True, max_length=100, null=True)),
+                ('individual_last_name', models.CharField(blank=True, max_length=100, null=True)),
+                ('individual_date_of_birth', models.DateField(blank=True, null=True)),
+                ('corporate_name', models.CharField(blank=True, max_length=255, null=True)),
+                ('corporate_acn', models.CharField(blank=True, max_length=9, null=True)),
+                ('corporate_abn', models.CharField(blank=True, max_length=11, null=True)),
+                ('trust_name', models.CharField(blank=True, max_length=255, null=True)),
+                ('trust_abn', models.CharField(blank=True, max_length=11, null=True)),
+                ('trust_type', models.CharField(blank=True, max_length=100, null=True)),
+                ('shareholding_percentage', models.DecimalField(decimal_places=2, help_text='Percentage of shares owned', max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
+                ('share_class', models.CharField(choices=[('ORDINARY', 'Ordinary Shares'), ('PREFERENCE', 'Preference Shares'), ('REDEEMABLE', 'Redeemable Shares'), ('OTHER', 'Other')], default='ORDINARY', max_length=20)),
+                ('acquisition_date', models.DateField(help_text='Date shares were acquired')),
+                ('is_director', models.BooleanField(default=False, help_text='Whether the shareholder is also a director')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='shareholders', to='company.company')),
+                ('director', models.ForeignKey(blank=True, help_text='Link to director record if shareholder is also a director', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='shareholdings', to='company.director')),
+            ],
+            options={
+                'verbose_name': 'Shareholder',
+                'verbose_name_plural': 'Shareholders',
+                'ordering': ['-shareholding_percentage'],
+            },
+        ),
+    ]

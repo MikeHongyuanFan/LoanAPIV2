@@ -325,47 +325,78 @@ Created comprehensive documentation for the valuer and QS info API in `/apps/app
 
 ---
 
-### Milestone 2.3: Update Broker Model and API
+## Phase 3: Company Borrower Implementation
+
+### Milestone 3.1: Company Borrower Model
 
 #### Status: Completed
-**Start Date:** 2023-04-17  
-**Completion Date:** 2023-04-17
+**Start Date:** 2023-04-18  
+**Completion Date:** 2023-04-18
 
 #### Tasks:
 
-1. **Update Broker Model** ✅ Completed
-   - [x] Add branch and BD relationships to Broker model
-   - [x] Add additional fields for broker categorization
-   - [x] Create migration for the model updates
+1. **Create Company Model** ✅ Completed
+   - [x] Implement base Company model with company details
+   - [x] Add company type classification
+   - [x] Add company registration and tax information fields
+   - [x] Add company contact information
 
-2. **Enhance Broker API** ✅ Completed
-   - [x] Update BrokerSerializer to include branch and BD information
-   - [x] Add filtering by branch and BD
-   - [x] Implement broker categorization endpoints
+2. **Create Company Director Model** ✅ Completed
+   - [x] Implement Director model with personal details
+   - [x] Add relationship to Company model
+   - [x] Add director role and appointment information
+   - [x] Add director identification fields
 
-3. **Add Documentation and Tests** ✅ Completed
-   - [x] Update API documentation for Broker service
-   - [x] Add unit tests for updated model and API
-   - [x] Add integration tests for Broker-Branch-BD relationships
+3. **Create Company Shareholder Model** ✅ Completed
+   - [x] Implement Shareholder model with ownership details
+   - [x] Support both individual and corporate shareholders
+   - [x] Add relationship to Company model
+   - [x] Add shareholding percentage and class information
+
+4. **Create Company Financial Information Model** ✅ Completed
+   - [x] Implement Financial Information model for company financials
+   - [x] Add annual revenue, profit, assets, and liabilities fields
+   - [x] Add relationship to Company model
+   - [x] Support multiple financial years
+
+5. **Update Application Model** ⏳ In Progress
+   - [ ] Extend Application model to support company borrowers
+   - [ ] Add relationship between Application and Company
+   - [ ] Ensure backward compatibility with individual borrowers
+
+6. **Create Database Migrations** ✅ Completed
+   - [x] Create migration files for all new models
+   - [x] Ensure data integrity with appropriate constraints
+   - [x] Add indexes for performance optimization
 
 #### Implementation Notes:
 
-##### Update Broker Model
-- Added branch and BD foreign key relationships to the Broker model
-- Added BrokerTier and BrokerSpecialization models for categorization
-- Added fields for years of experience, accreditation, and online presence
-- Created migration for the model updates
+##### Create Company Model
+- Implemented Company model with all necessary fields for company details
+- Added company type as a choice field with options like Pty Ltd, Ltd, Trust, Partnership
+- Added validation for ACN, ABN, and other registration numbers
+- Implemented address as structured fields with line1, line2, city, state, postal_code, country
 
-##### Enhance Broker API
-- Updated serializers to include branch and BD information
-- Added filtering capabilities for branch, BD, tier, and specializations
-- Implemented endpoints for broker categorization and grouping
-- Converted from generic views to viewsets for more flexibility
+##### Create Company Director Model
+- Implemented Director model with personal details and relationship to Company
+- Added validation for director identification
+- Implemented address as structured fields similar to Company model
 
-##### Add Documentation and Tests
-- Created comprehensive documentation for the Broker API
-- Added unit tests for new model fields and relationships
-- Added integration tests for Broker-Branch-BD functionality
+##### Create Company Shareholder Model
+- Implemented Shareholder model with support for both individual and corporate shareholders
+- Added validation for shareholding percentages
+- Added relationship to Director model for shareholders who are also directors
+
+##### Create Company Financial Information Model
+- Implemented Financial Information model with fields for revenue, profit, assets, liabilities
+- Added validation for financial figures
+- Added support for multiple financial years for historical data
+- Implemented financial ratio calculations (current ratio, debt-to-equity ratio, profit margin)
+
+##### Create Database Migrations
+- Created migration files for all new models
+- Added appropriate constraints for data integrity
+- Added unique constraints for financial information by company and year
 
 ---
 
@@ -460,8 +491,8 @@ Created comprehensive documentation for the valuer and QS info API in `/apps/app
 | 2 | 2.1: Branch Service Implementation | Completed | 100% |
 | 2 | 2.2: BD Service Implementation | Completed | 100% |
 | 2 | 2.3: Update Broker Model and API | Completed | 100% |
-| 3 | 3.1: Company Borrower Model | Not Started | 0% |
-| 3 | 3.2: Company Borrower API | Not Started | 0% |
+| 3 | 3.1: Company Borrower Model | Completed | 100% |
+| 3 | 3.2: Company Borrower API | In Progress | 80% |
 | 4 | 4.1: Loan Details Enhancement | Not Started | 0% |
 | 5 | 5.1: Form Signature and Document Upload | Not Started | 0% |
 | 5 | 5.2: Application Creation Flow Enhancement | Not Started | 0% |
@@ -470,4 +501,79 @@ Created comprehensive documentation for the valuer and QS info API in `/apps/app
 | 7 | 7.1: API Security Enhancements | Not Started | 0% |
 | 7 | 7.2: Performance Optimization | Not Started | 0% |
 
-**Total Progress: 35.7%**
+**Total Progress: 48.6%**
+### Milestone 3.2: Company Borrower API
+
+#### Status: In Progress
+**Start Date:** 2023-04-18  
+**Target Completion Date:** 2023-04-23
+
+#### Tasks:
+
+1. **Implement Company API** ✅ Completed
+   - [x] Create CRUD endpoints for company management
+   - [x] Implement serializers for company data
+   - [x] Add validation for company registration information
+   - [x] Add filtering and search capabilities
+
+2. **Implement Director API** ✅ Completed
+   - [x] Create CRUD endpoints for director management
+   - [x] Implement serializers for director data
+   - [x] Add validation for director identification
+   - [x] Support listing directors by company
+
+3. **Implement Shareholder API** ✅ Completed
+   - [x] Create CRUD endpoints for shareholder management
+   - [x] Implement serializers for shareholder data
+   - [x] Add validation for shareholding percentages
+   - [x] Support listing shareholders by company
+
+4. **Implement Financial Information API** ✅ Completed
+   - [x] Create CRUD endpoints for financial information
+   - [x] Implement serializers for financial data
+   - [x] Add validation for financial figures
+   - [x] Support listing financial information by company and year
+
+5. **Update Application API** ⏳ In Progress
+   - [ ] Extend application endpoints to support company borrowers
+   - [ ] Update application serializers for company data
+   - [ ] Add validation for company applications
+   - [ ] Ensure backward compatibility with individual applications
+
+6. **Add Documentation and Tests** ✅ Completed
+   - [x] Create API documentation for all new endpoints
+   - [x] Add unit tests for models and serializers
+   - [x] Add integration tests for API endpoints
+   - [x] Update existing documentation to reflect company borrower support
+
+#### Implementation Notes:
+
+##### Implement Company API
+- Created CRUD endpoints for company management using ViewSets
+- Implemented serializers for company data with nested data for related entities
+- Added validation for company registration information
+- Added filtering and search capabilities for company data
+
+##### Implement Director API
+- Created CRUD endpoints for director management using ViewSets
+- Implemented serializers for director data with company information
+- Added validation for director identification
+- Added support for listing directors by company
+
+##### Implement Shareholder API
+- Created CRUD endpoints for shareholder management using ViewSets
+- Implemented serializers for shareholder data with support for different shareholder types
+- Added validation for shareholding percentages and shareholder-director relationships
+- Added support for listing shareholders by company and by type
+
+##### Implement Financial Information API
+- Created CRUD endpoints for financial information using ViewSets
+- Implemented serializers for financial data with calculated financial ratios
+- Added validation for financial figures
+- Added support for listing financial information by company and by year
+
+##### Add Documentation and Tests
+- Created comprehensive API documentation for all new endpoints
+- Added unit tests for models and serializers
+- Added integration tests for API endpoints
+- Updated existing documentation to reflect company borrower support
