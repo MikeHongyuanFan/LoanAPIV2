@@ -100,7 +100,7 @@ When user fills form or uploads it as PDF:
 
 
 ---
-
+### updated Valuer and QS API entities 
 ## 🧩 **Old Setup:**
 
 - `Valuer` and `QS` were **separate API entities**
