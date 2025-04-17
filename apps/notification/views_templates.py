@@ -113,8 +113,10 @@ class NotificationTemplatePreviewView(views.APIView):
                     "application_id": application.id,
                     "reference_number": application.reference_number,
                     "stage": application.get_status_display(),
-                    "borrower_name": application.borrower.full_name if application.borrower else "John Doe",
+                    "borrower_name": application.borrower.name if application.borrower else "John Doe",
                     "loan_amount": application.loan_amount,
+                    "interest_rate": application.interest_rate,
+                    "property_address": application.property_address,
                 })
             else:
                 context.update({
@@ -274,7 +276,7 @@ class SendEmailNotificationView(views.APIView):
         # Add borrower information if available
         if application.borrower:
             context.update({
-                "borrower_name": application.borrower.full_name,
+                "borrower_name": application.borrower.name,
                 "borrower_email": application.borrower.email,
                 "borrower_phone": application.borrower.phone,
             })
@@ -283,7 +285,7 @@ class SendEmailNotificationView(views.APIView):
         context.update({
             "loan_amount": application.loan_amount,
             "interest_rate": application.interest_rate,
-            "loan_term": application.loan_term,
+            "loan_term": application.loan_term_months,
             "stage": application.get_status_display(),
         })
         
