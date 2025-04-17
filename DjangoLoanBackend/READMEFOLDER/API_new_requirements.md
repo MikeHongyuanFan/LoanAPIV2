@@ -97,6 +97,79 @@ When user fills form or uploads it as PDF:
 7. **Store Signature block** (or attach scanned form)
 8. **Link all above** to Application
 
+
+
 ---
+
+## 🧩 **Old Setup:**
+
+- `Valuer` and `QS` were **separate API entities**
+- They had their own:
+  - Lists
+  - Create/update/delete endpoints
+  - Detail pages
+  - Linkage to Applications
+
+---
+
+## 🔄 **New Requirement:**
+
+> “Valuer and QS will no longer be separate services. They now **only serve as information display inside the application.**”
+
+### 🔍 What this really means:
+
+✅ **NO more:**
+- `/valuers/`, `/qs/` API routes
+- Creating/editing valuers or QS as standalone entities
+
+✅ **YES to:**
+- Treating **Valuer and QS as embedded info blocks** inside the `Application`
+- No separate DB models or relationships — just fields **inside** the application record
+
+---
+
+## ✅ Final Design Recommendation:
+
+### 🔧 Update the `Application` schema to include:
+
+```json
+"valuer_info": {
+  "company_name": "String",
+  "contact_name": "String",
+  "email": "String",
+  "phone": "String"
+},
+"qs_info": {
+  "company_name": "String",
+  "contact_name": "String",
+  "email": "String",
+  "phone": "String"
+}
+```
+
+- These will be **stored directly inside the `Application` record**
+- Act as **readonly display** fields for historical/reference use
+- Can be pulled directly from the form input
+
+---
+
+## 🎯 What This Achieves:
+
+| Before | After |
+|--------|-------|
+| Complex models and endpoints for QS and Valuer | Simple inline JSON blocks in `Application` |
+| Need to maintain full `Valuer` and `QS` services | Only extract and display them from uploaded form |
+| Relational joins + tracking | Clean, self-contained reference only |
+
+---
+
+### 💡 Why this is a **good thing**:
+- Cuts **development & maintenance** complexity
+- No need to track QS/valuer as system entities
+- Aligns with the reality: **they’re external references**, not actors in the system
+
+---
+
+
 
 
