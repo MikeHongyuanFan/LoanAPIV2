@@ -11,4 +11,7 @@ router.register(r'fees', FeeViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Custom endpoints for valuer and QS info
+    path('applications/<uuid:pk>/update-valuer-info/', ApplicationViewSet.as_view({'post': 'update_valuer_info'}), name='application-update-valuer-info'),
+    path('applications/<uuid:pk>/update-qs-info/', ApplicationViewSet.as_view({'post': 'update_qs_info'}), name='application-update-qs-info'),
 ]

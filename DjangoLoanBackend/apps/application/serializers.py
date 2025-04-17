@@ -6,6 +6,26 @@ from apps.valuer.serializers import ValuerSerializer
 from apps.qs.serializers import QSSerializer
 from apps.product.serializers import ProductSerializer
 
+
+class ValuerInfoSerializer(serializers.Serializer):
+    """
+    Serializer for valuer information stored in the Application model
+    """
+    company_name = serializers.CharField(max_length=255, required=True)
+    contact_name = serializers.CharField(max_length=255, required=True)
+    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(max_length=20, required=True)
+
+
+class QSInfoSerializer(serializers.Serializer):
+    """
+    Serializer for QS information stored in the Application model
+    """
+    company_name = serializers.CharField(max_length=255, required=True)
+    contact_name = serializers.CharField(max_length=255, required=True)
+    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(max_length=20, required=True)
+
 class FeeSerializer(serializers.ModelSerializer):
     """
     Serializer for fee information
@@ -82,15 +102,45 @@ class ApplicationSerializer(serializers.ModelSerializer):
     """
     Serializer for loan applications
     """
+    valuer_info = ValuerInfoSerializer(required=False)
+    qs_info = QSInfoSerializer(required=False)
+    
     class Meta:
         model = Application
         fields = [
-            'id', 'borrower', 'broker', 'status', 'loan_amount', 'product',
-            'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term_months', 'interest_rate', 'settlement_date', 'expiry_date',
-            'loan_purpose', 'property_type', 'property_value', 'reference_number'
+            'id', 'borrower', 'broker', 'status', 'stage', 'stage_changed_at',
+            'loan_amount', 'product', 'created_at', 'updated_at', 'valuer', 'qs',
+            'valuer_info', 'qs_info', 'property_address', 'loan_term_months', 
+            'interest_rate', 'settlement_date', 'expiry_date', 'loan_purpose', 
+            'property_type', 'property_value', 'reference_number'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number', 'stage_changed_at']
+    
+    def validate_valuer_info(self, value):
+        """
+        Validate valuer_info field
+        """
+        if value and not isinstance(value, dict):
+            raise serializers.ValidationError("valuer_info must be a dictionary")
+        
+        # If the application is in valuation stage, valuer_info is required
+        if self.instance and self.instance.stage == 'VALUATION' and not value:
+            raise serializers.ValidationError("valuer_info is required when application is in VALUATION stage")
+        
+        return value
+    
+    def validate_qs_info(self, value):
+        """
+        Validate qs_info field
+        """
+        if value and not isinstance(value, dict):
+            raise serializers.ValidationError("qs_info must be a dictionary")
+        
+        # If the application is in dual stage, qs_info is required
+        if self.instance and self.instance.stage == 'DUAL' and not value:
+            raise serializers.ValidationError("qs_info is required when application is in DUAL stage")
+        
+        return value
 
 class ApplicationDetailSerializer(serializers.ModelSerializer):
     """
@@ -106,17 +156,20 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
     extensions = ExtensionSerializer(many=True, read_only=True)
     fees = FeeSerializer(many=True, read_only=True)
     payments = PaymentSerializer(many=True, read_only=True)
+    valuer_info = ValuerInfoSerializer(required=False)
+    qs_info = QSInfoSerializer(required=False)
     
     class Meta:
         model = Application
         fields = [
-            'id', 'borrower', 'broker', 'status', 'loan_amount', 'product',
-            'created_at', 'updated_at', 'valuer', 'qs', 'property_address',
-            'loan_term_months', 'interest_rate', 'settlement_date', 'expiry_date',
-            'loan_purpose', 'property_type', 'property_value', 'reference_number',
+            'id', 'borrower', 'broker', 'status', 'stage', 'stage_changed_at',
+            'loan_amount', 'product', 'created_at', 'updated_at', 'valuer', 'qs',
+            'valuer_info', 'qs_info', 'property_address', 'loan_term_months', 
+            'interest_rate', 'settlement_date', 'expiry_date', 'loan_purpose', 
+            'property_type', 'property_value', 'reference_number',
             'notes', 'repayments', 'extensions', 'fees', 'payments'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'reference_number', 'stage_changed_at']
 
 class LoanCalculatorSerializer(serializers.Serializer):
     """

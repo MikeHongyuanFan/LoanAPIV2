@@ -1,11 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'brokers', views.BrokerViewSet)
+router.register(r'broker-tiers', views.BrokerTierViewSet)
+router.register(r'broker-specializations', views.BrokerSpecializationViewSet)
+router.register(r'broker-commissions', views.BrokerCommissionViewSet)
+router.register(r'commission-payments', views.CommissionPaymentViewSet)
+
 urlpatterns = [
-    path('', views.BrokerListCreateView.as_view(), name='broker-list'),
-    path('<int:pk>/', views.BrokerDetailView.as_view(), name='broker-detail'),
-    path('<int:broker_id>/commissions/', views.BrokerCommissionListView.as_view(), name='broker-commissions'),
-    path('commissions/<int:pk>/', views.BrokerCommissionDetailView.as_view(), name='commission-detail'),
-    path('payments/', views.CommissionPaymentListCreateView.as_view(), name='commission-payments'),
-    path('payments/<int:pk>/', views.CommissionPaymentDetailView.as_view(), name='commission-payment-detail'),
+    path('', include(router.urls)),
 ]

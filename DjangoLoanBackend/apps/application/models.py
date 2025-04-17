@@ -18,6 +18,20 @@ class Application(models.Model):
         ('CLOSED', 'Closed'),
     )
     
+    # New stage field as per requirements
+    STAGE_CHOICES = (
+        ('ENQUIRY', 'Enquiry'),
+        ('INDICATIVE_OFFER', 'Indicative Offer'),
+        ('VALUATION', 'Valuation'),
+        ('DUAL', 'Dual'),
+        ('FORMAL_APPROVAL', 'Formal Approval'),
+        ('LOAN_DOCS_ISSUED', 'Loan Documents Issued'),
+        ('LOAN_DOCS_RETURN', 'Loan Documents Return'),
+        ('SETTLEMENT', 'Settlement'),
+        ('REJECT', 'Reject'),
+        ('WITHDRAWAL', 'Withdrawal'),
+    )
+    
     LOAN_PURPOSE_CHOICES = (
         ('PURCHASE', 'Purchase'),
         ('REFINANCE', 'Refinance'),
@@ -30,6 +44,8 @@ class Application(models.Model):
     # Basic information
     reference_number = models.CharField(max_length=20, unique=True, editable=False)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='DRAFT')
+    stage = models.CharField(max_length=30, choices=STAGE_CHOICES, default='ENQUIRY')
+    stage_changed_at = models.DateTimeField(auto_now_add=True)
     loan_amount = models.DecimalField(max_digits=15, decimal_places=2)
     loan_term_months = models.IntegerField()
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
@@ -41,6 +57,10 @@ class Application(models.Model):
     valuer = models.ForeignKey('valuer.Valuer', on_delete=models.SET_NULL, null=True, blank=True, related_name='applications')
     qs = models.ForeignKey('qs.QS', on_delete=models.SET_NULL, null=True, blank=True, related_name='applications')
     product = models.ForeignKey('product.Product', on_delete=models.PROTECT, related_name='applications')
+    
+    # Valuer and QS information (embedded as per requirements)
+    valuer_info = models.JSONField(null=True, blank=True, default=dict)
+    qs_info = models.JSONField(null=True, blank=True, default=dict)
     
     # Property information
     property_address = models.TextField()
@@ -66,6 +86,19 @@ class Application(models.Model):
         return f"{self.reference_number} - {self.borrower.name}"
     
     def save(self, *args, **kwargs):
+        # Store original stage for signal processing
+        if self.pk:
+            try:
+                old_instance = Application.objects.get(pk=self.pk)
+                self._original_stage = old_instance.stage
+                self._original_status = old_instance.status
+                
+                # Update stage_changed_at if stage has changed
+                if old_instance.stage != self.stage:
+                    self.stage_changed_at = timezone.now()
+            except Application.DoesNotExist:
+                pass
+        
         # Generate reference number if not set
         if not self.reference_number:
             year = timezone.now().strftime('%Y')
@@ -82,6 +115,22 @@ class Application(models.Model):
         if self.property_value > 0:
             return (self.loan_amount / self.property_value) * 100
         return 0
+    
+    def get_valuer_info(self):
+        """
+        Get valuer information as a structured dictionary
+        """
+        if not self.valuer_info:
+            return None
+        return self.valuer_info
+    
+    def get_qs_info(self):
+        """
+        Get QS information as a structured dictionary
+        """
+        if not self.qs_info:
+            return None
+        return self.qs_info
     
     def is_expired(self):
         """

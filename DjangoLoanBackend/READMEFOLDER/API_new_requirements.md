@@ -1,12 +1,9 @@
-**Beautifully summarized, General.** Here's your updated implementation plan based on that summary — I’ve structured it clearly so your dev team (or future self) can go straight to work:
-
----
-
-## ✅ **Changes to the Application Entity & Logic**
+## ✅ Changes to the Application Entity & Logic (Now with Input Fields)
 
 ### 🔧 Add a Predefined Field: `stage`
-- Type: `Enum`
-- Values:
+
+- **Type:** Enum
+- **Values:**
   ```
   [
     "enquiry",
@@ -21,155 +18,178 @@
     "withdrawal"
   ]
   ```
-- Triggers:
+- **Triggers:**
   - Send **email** to `broker.email` and `borrowers[].email` **when stage changes**
-  - Start **timer logic** to track if stage remains the same for `X` days
-    - If yes, send **notification** to assigned `bd.email`
+  - Timer logic to notify BD if the case stays in same stage for `X` days (configurable)
 
 ---
 
-## ✅ **Broker Detail Page Fields (Frontend & API Response)**
+## ✅ Broker Detail Page Fields (Frontend & API Response)
 
 - `name`
 - `company`
 - `phone`
 - `email`
-- `branch_id` → Display branch name
-- `bd_ids` → Display list of linked BDs (Many-to-Many)
+- `branch_id` ➔ Display branch name
+- `bd_ids` ➔ Display list of linked BDs (Many-to-Many)
 
 ---
 
-## ✅ **New: BD API Service**
+## ✅ New: BD API Service
 
-### **Endpoints**
-| Method | Endpoint             | Description                   |
-|--------|----------------------|-------------------------------|
-| GET    | `/bds/`              | List all BDs (optional filters) |
-| POST   | `/bds/`              | Create a BD                   |
-| GET    | `/bds/{id}/`         | Get BD detail                 |
-| DELETE | `/bds/{id}/`         | Delete BD                     |
-| PATCH  | `/bds/{id}/`         | Update BD                     |
+### Endpoints
 
-### **BD Fields**
+| Method | Endpoint     | Description                          |
+| ------ | ------------ | ------------------------------------ |
+| GET    | `/bds/`      | List all BDs (with optional filters) |
+| POST   | `/bds/`      | Create a new BD                      |
+| GET    | `/bds/{id}/` | Get BD detail                        |
+| DELETE | `/bds/{id}/` | Delete BD                            |
+| PATCH  | `/bds/{id}/` | Update BD                            |
+
+### Fields
+
 - `id`
 - `name`
 - `email`
 - `phone`
 - `branch_id`
 
-> ⚠️ Each BD must belong to a **Branch**
+> ⚠️ A BD must belong to a Branch
+>
+> And a BD can belong to different Branch.
 
 ---
 
-## ✅ **New: Branch Company API Service**
+## ✅ New: Branch Company API Service
 
-### **Endpoints**
-| Method | Endpoint                | Description                  |
-|--------|-------------------------|------------------------------|
-| GET    | `/branches/`           | List all branches            |
-| POST   | `/branches/`           | Create a new branch          |
-| GET    | `/branches/{id}/`      | Get branch detail            |
-| DELETE | `/branches/{id}/`      | Delete branch                |
-| PATCH  | `/branches/{id}/`      | Update branch info           |
+### Endpoints
 
-### **Branch Fields**
+| Method | Endpoint         | Description        |
+| ------ | ---------------- | ------------------ |
+| GET    | `/branches/`     | List branches      |
+| POST   | `/branches/`     | Create new branch  |
+| GET    | `/branches/{id}` | Get branch detail  |
+| DELETE | `/branches/{id}` | Delete branch      |
+| PATCH  | `/branches/{id}` | Update branch info |
+
+### Fields
+
 - `id`
 - `name`
 - `address`
 
-> ⚠️ A **Branch can have multiple BDs**
+> ⚠️ A Branch can have multiple BDs
 
 ---
 
-## ✅ **Data Creation Flow When an Application is Created**
+## ✅ Data Creation Flow When an Application is Created (with Input Fields)
 
-When user fills form or uploads it as PDF:
-1. **Create Application**
-2. **Create Borrower(s)** (from form — one or more)
-3. **Create Company Borrower** (if business loan)
-4. **Create Guarantor(s)** (linked to borrower & application)
-5. **Create Loan Details**
-   - Purpose
-   - Loan Amount
-   - Term
-   - Expected Rate
-6. **Create Property/Security Info**
-7. **Store Signature block** (or attach scanned form)
-8. **Link all above** to Application
+When a user submits the application form (or uploads PDF):
 
+### 1. 📅 Application
 
+- reference\_number
+- application\_type
+- purpose
+- loan\_amount
+- interest\_rate
+- loan\_term
+- loan\_term\_unit
+- repayment\_frequency
+- product\_id
+- estimated\_settlement\_date
+- stage *(enum)*
+- bd\_id, branch\_id
 
----
-### updated Valuer and QS API entities 
-## 🧩 **Old Setup:**
+### 2. 👨‍💼 Borrower(s)
 
-- `Valuer` and `QS` were **separate API entities**
-- They had their own:
-  - Lists
-  - Create/update/delete endpoints
-  - Detail pages
-  - Linkage to Applications
+- first\_name / last\_name / full\_name
+- date\_of\_birth / gender / marital\_status
+- email / phone / mobile / work\_phone
+- residential\_address & mailing\_address (street, unit, city, state, postal\_code, country)
+- residential\_status, years\_at\_address, nationality
+- tax\_id, id\_type, id\_number, id\_expiry\_date
+- dependents
+- employment: status, employer name, position, start/end date, phone, address
+- banking: bank\_name, account\_type, account\_number, bsb, holder\_name, years\_with\_bank
+- financials: income, expenses, assets, liabilities
+- additional\_info: notes, tags, referral\_source
 
----
+### 3. 💼 Company Borrower (if business loan)
 
-## 🔄 **New Requirement:**
+- company\_name
+- abn / acn
+- director\_id
+- contact\_number
+- industry\_type
+- registered\_address (same structure as above)
+- trustee\_flags (is\_trustee, is\_smsf)
+- trustee\_name
+- annual\_income
 
-> “Valuer and QS will no longer be separate services. They now **only serve as information display inside the application.**”
+### 4. 👨‍💼 Guarantor(s)
 
-### 🔍 What this really means:
+- first\_name / last\_name / full\_name
+- relationship
+- email / phone / dob
+- address (full structure)
+- borrower\_id
 
-✅ **NO more:**
-- `/valuers/`, `/qs/` API routes
-- Creating/editing valuers or QS as standalone entities
+### 5. 📉 Loan Details
 
-✅ **YES to:**
-- Treating **Valuer and QS as embedded info blocks** inside the `Application`
-- No separate DB models or relationships — just fields **inside** the application record
+- purpose (multi-select): purchase, refinance, cash out, etc.
+- use\_of\_funds (description & amount per row)
+- term & expected rate
+- proposed settlement date
+- exit\_strategy: sale, refinance, cashflow, other
 
----
+### 6. 🏠 Security / Property Info
 
-## ✅ Final Design Recommendation:
+- address: unit/street/suburb/state/postcode
+- property\_type (enum)
+- estimated\_value
+- purchase\_price
+- current\_debt: 1st mortgage, 2nd mortgage
+- valuation\_type: single/double/garage/etc.
+- bedrooms, bathrooms, car\_spaces, building\_size, land\_size
+- owner\_occupied (boolean)
 
-### 🔧 Update the `Application` schema to include:
+### 7. 🛌 Signatures & Upload
 
-```json
-"valuer_info": {
-  "company_name": "String",
-  "contact_name": "String",
-  "email": "String",
-  "phone": "String"
-},
-"qs_info": {
-  "company_name": "String",
-  "contact_name": "String",
-  "email": "String",
-  "phone": "String"
-}
-```
-
-- These will be **stored directly inside the `Application` record**
-- Act as **readonly display** fields for historical/reference use
-- Can be pulled directly from the form input
-
----
-
-## 🎯 What This Achieves:
-
-| Before | After |
-|--------|-------|
-| Complex models and endpoints for QS and Valuer | Simple inline JSON blocks in `Application` |
-| Need to maintain full `Valuer` and `QS` services | Only extract and display them from uploaded form |
-| Relational joins + tracking | Clean, self-contained reference only |
+- form\_signature\_date
+- form\_signed\_by: borrower(s)/guarantor(s)
+- uploaded\_pdf\_path (link to stored document)
 
 ---
 
-### 💡 Why this is a **good thing**:
-- Cuts **development & maintenance** complexity
-- No need to track QS/valuer as system entities
-- Aligns with the reality: **they’re external references**, not actors in the system
+## ✅ Final Valuer + QS Schema
+
+Embedded directly in `Application` input form:
+
+### Input Fields (to be filled manually or extracted from uploaded PDF):
+
+#### Valuer Info
+- `valuer_info.company_name`
+- `valuer_info.contact_name`
+- `valuer_info.email`
+- `valuer_info.phone`
+
+#### QS Info
+- `qs_info.company_name`
+- `qs_info.contact_name`
+- `qs_info.email`
+- `qs_info.phone`
+
+These fields(QS, Valuer) are:
+- ✅ Part of the `Application` object
+- ❌ Not managed through separate APIs
+- 🔒 Treated as **read-only reference values** after submission (for audit and traceability)
+
+> Simple, flat input blocks instead of separate Valuer/QS models or tables
 
 ---
 
-
-
+You are now **deployment-ready** with clear input mappings for all entities and API responsibilities.
+Let me know when you're ready for the updated backend schema file, API payload mockups, or ER diagram.
 

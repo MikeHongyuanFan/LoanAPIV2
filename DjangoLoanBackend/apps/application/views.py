@@ -415,6 +415,46 @@ class ExtensionViewSet(viewsets.ModelViewSet):
             'status': 'success',
             'message': 'Extension declined successfully'
         })
+    
+    @action(detail=True, methods=['post'])
+    def update_valuer_info(self, request, pk=None):
+        """
+        Update valuer information for an application
+        """
+        application = self.get_object()
+        
+        # Validate valuer info using the ValuerInfoSerializer
+        from .serializers import ValuerInfoSerializer
+        serializer = ValuerInfoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Update valuer_info field
+        application.valuer_info = serializer.validated_data
+        application.save()
+        
+        # Return updated application
+        from .serializers import ApplicationDetailSerializer
+        return Response(ApplicationDetailSerializer(application).data)
+    
+    @action(detail=True, methods=['post'])
+    def update_qs_info(self, request, pk=None):
+        """
+        Update QS information for an application
+        """
+        application = self.get_object()
+        
+        # Validate QS info using the QSInfoSerializer
+        from .serializers import QSInfoSerializer
+        serializer = QSInfoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Update qs_info field
+        application.qs_info = serializer.validated_data
+        application.save()
+        
+        # Return updated application
+        from .serializers import ApplicationDetailSerializer
+        return Response(ApplicationDetailSerializer(application).data)
 
 
 class FeeViewSet(viewsets.ModelViewSet):
