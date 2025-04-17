@@ -137,7 +137,26 @@ This document tracks the implementation progress of missing APIs and features in
 - The error was occurring because the ProductSerializer was trying to access an 'interest_rate' field that doesn't exist in the Product model
 - The test was failing at the detail view step because the serializer was trying to access non-existent fields
 
-### 12. Next Steps
+### 12. Repayment Tracking Fix (2025-04-16)
+
+- Fixed type mismatch issue in RepaymentViewSet.record_payment method:
+  - Changed `amount = float(amount)` to `amount = Decimal(str(amount))`
+  - Added proper import for Decimal from the decimal module
+  - Improved error handling to catch both ValueError and TypeError
+  - Updated error message to be more descriptive
+
+- The issue was occurring because:
+  - The model field `paid_amount` is a DecimalField (stores as decimal.Decimal)
+  - The view was converting the input amount to a float
+  - Python doesn't support adding float to Decimal directly
+
+- Tests now passing:
+  - test_record_partial_payment: PASSED
+  - test_record_full_payment: PASSED
+
+- Created TestingStatus.md to document current test status and issues
+
+### 13. Next Steps
 
 - Implement additional features for comprehensive test coverage:
   - Note reminder functionality
@@ -167,3 +186,72 @@ This document tracks the implementation progress of missing APIs and features in
 | feature/fee-management | Pre-existing | Fee management implementation | Pre-existing |
 | feature/notification-system | Pre-existing | Notification system implementation | Pre-existing |
 | feature/broker-commission | Pre-existing | Broker commission implementation | Pre-existing |
+### 14. Fixed Test Issues (2025-04-16)
+
+- Fixed loan application flow test:
+  - Changed application status from 'SETTLED' to 'FINALIZED' in the finalize action
+  - Updated the ApplicationViewSet.finalize method to match test expectations
+
+- Fixed loan extension tests:
+  - Updated ExtensionSerializer to handle date conversion properly in validate method
+  - Modified test to use format='json' to avoid QueryDict immutability issues
+  - Added required fields (status, requested_date) to test data
+
+- Fixed stage notifications tests:
+  - Created proper signals.py file in the application app
+  - Updated signal handlers to use correct field names (subject instead of title, related_entity instead of related_type)
+  - Added status field with default value of 'PENDING'
+  - Registered signals in apps.py
+
+- Updated TestingStatus.md with:
+  - Current test summary (38 passing tests out of 47)
+  - Details of fixed issues
+  - List of current warnings
+  - Recommendations for addressing remaining issues
+
+- All functional tests now passing:
+  - test_complete_loan_application_flow: PASSED
+  - test_create_extension_request: PASSED
+  - test_approve_extension: PASSED
+  - test_decline_extension: PASSED
+  - test_stage_change_notification: PASSED
+  - test_stage_stagnation_notification: PASSED
+
+### 15. Next Steps
+
+- Fix authentication test errors by defining missing fixtures
+- Address warnings about naive datetimes and model registration
+- Enhance test coverage with more edge cases and performance tests
+- Implement remaining features from the requirements
+
+### 16. Fixed Integration Tests (2025-04-17)
+
+- Fixed authentication test mocking issues:
+  - Updated mocks to return proper HttpResponse objects instead of integer status codes
+  - Imported HttpResponse from django.http
+  - Created mock_response objects with appropriate status codes
+
+- Fixed API test content type issues:
+  - Added proper content type headers to PATCH requests
+  - Used json.dumps() to properly serialize the data
+  - Added content_type='application/json' parameter to requests
+
+- All tests now passing:
+  - 13 unit tests passing
+  - 18 integration tests passing
+  - 16 functional tests passing
+  - 47 total tests passing (100% pass rate)
+
+- Updated TestingStatus.md with:
+  - Current test summary showing 100% pass rate
+  - Details of all fixed issues
+  - List of current warnings
+  - Recommendations for future improvements
+
+### 17. Next Steps
+
+- Address naive datetime warnings by using timezone-aware datetime objects
+- Fix pagination warnings by adding ordering to querysets
+- Enhance test coverage with more edge case tests
+- Improve test organization and documentation
+- Implement remaining features from the requirements
